@@ -104,7 +104,62 @@ El código fuente proporcionado está escrito en PHP. Se utilizará la versión 
 
 ---
 
-## 6. Conclusión
+## 6. Dimensionamiento y Análisis de Costes (FinOps)
+
+Para garantizar la viabilidad del proyecto dentro del presupuesto asignado (**50 USD** de crédito AWS Academy), se ha realizado un estudio comparativo de las instancias disponibles en la capa de computación general.
+
+### 6.1. Comparativa de Instancias (Candidatas)
+
+Se han evaluado tres tipos de instancias para equilibrar rendimiento y coste durante los 3 meses de desarrollo.
+
+| Instancia | vCPU | RAM | Generación | Coste Estimado (On-Demand)* |
+| --- | --- | --- | --- | --- |
+| **t2.micro** | 1 | 1 GiB | Xen (Antigua) | ~$0.0116 / hora |
+| **t3.micro** | **2** | 1 GiB | Nitro (Nueva) | **~$0.0104 / hora** |
+| **t3.small** | 2 | 2 GiB | Nitro (Nueva) | ~$0.0208 / hora |
+
+**Precios basados en la región us-east-1. Pueden variar ligeramente según disponibilidad.*
+
+### 6.2. Análisis de Opciones
+
+1. **Opción A: t2.micro (Descartada)**
+* A pesar de ser la clásica de la "Capa Gratuita", es una tecnología más antigua (Hipervisor Xen). Ofrece solo 1 vCPU y su coste es paradójicamente igual o superior a la familia T3 en muchas regiones. No aporta ventajas técnicas.
+
+
+2. **Opción B: t3.small (Plan de Contingencia)**
+* Con 2 GiB de RAM, sería la opción más cómoda para soportar Docker y MySQL 8. Sin embargo, su coste es el doble. Reservamos esta opción solo como "Plan de Escalado Vertical" en caso de emergencia técnica en el Sprint 3.
+
+
+3. **Opción C: t3.micro (Opción Seleccionada)**
+* **La ganadora.** Ofrece **2 vCPUs** (el doble que la t2), lo que acelerará los despliegues y la compilación de contenedores. Es la opción más económica de las tres.
+
+
+
+### 6.3. Estrategia de Optimización de Recursos
+
+Somos conscientes de que **1 GiB de RAM (t3.micro)** es un límite ajustado para la arquitectura de microservicios (Sprint 2/3). Para mitigar el riesgo de *OOM Kill* (Out of Memory) sin duplicar el coste pasando a una `t3.small`, implementaremos una técnica de administración de sistemas:
+
+* **SWAP File:** Configuraremos un archivo de intercambio de **2 GB** en el disco SSD (EBS). Esto permitirá al Kernel de Linux mover procesos inactivos de Docker al disco, liberando RAM real para MySQL y Apache.
+
+### 6.4. Estimación de Costes Mensuales (TCO)
+
+Calculamos el coste para un escenario de "Uso Continuo" (730 horas/mes).
+
+| Concepto | Recurso | Cálculo | Total Mensual |
+| --- | --- | --- | --- |
+| **Cómputo** | Instancia `t3.micro` | $0.0104 x 730h | **$7.60** |
+| **Almacenamiento** | Disco EBS gp3 (20GB) | $0.08 x 20GB | **$1.60** |
+| **Red** | IP Elástica (IPv4) | Gratis (en uso) | **$0.00** |
+| **Imprevistos** | Margen de error | 10% | **$0.92** |
+| **TOTAL** |  |  | **~$10.12 / mes** |
+
+* **Coste Proyecto (3 meses):** ~$30.36 USD.
+* **Presupuesto Disponible:** $50.00 USD.
+* **Resultado:** **VIABLE.** El proyecto dispone de un superávit de casi 20$ que permite, si fuera estrictamente necesario, escalar a `t3.small` durante el último mes (Sprint 3) sin agotar el crédito.
+
+---
+
+## 7. Conclusión
 
 La arquitectura tecnológica elegida es un **Stack LAMP homogéneo sobre AWS EC2**.
 
@@ -112,7 +167,7 @@ Esta decisión se basa en la **profesionalización** (uso de AWS en lugar de Isa
 
 ---
 
-## 7. Referencias Bibliográficas
+## 8. Referencias Bibliográficas
 
 Para la elaboración de este estudio se han consultado las siguientes fuentes:
 
