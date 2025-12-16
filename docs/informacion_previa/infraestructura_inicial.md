@@ -15,7 +15,7 @@ Se aprovisionará una única máquina virtual (Instancia EC2) que alojará la pi
 
 ### Componentes de Software (Instalados en la instancia)
 1.  **Servidor Web:** Apache. Actuará como punto de entrada para las peticiones HTTP.
-2.  **Intérprete Backend:** PHP.
+2.  **Intérprete Backend:** PHP. Ejecuta el código de `extagram.php`. Valida que la foto sea subida correcta.
 3.  **Base de Datos:** MySql Server. Instalado localmente en la misma instancia (`localhost`). Almacenará la tabla `posts` y, opcionalmente, las imágenes como BLOBs.
 
 ## 3. Esquema de Red y Seguridad
