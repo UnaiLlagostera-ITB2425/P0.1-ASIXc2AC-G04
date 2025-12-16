@@ -42,6 +42,76 @@ Utilizamos la metodología **Agile** para la gestión de tareas, coordinando el 
 
 #### Acta 15/12/2025
 
+---
+
+# Acta de Reunión #01: Kick-off y Sprint Planning**Proyecto:** Extagram
+**Fecha:** 16/12/2025
+**Hora de inicio:** 16:00
+**Hora de finalización:** 17:30
+**Lugar:** Aula 209
+**Asistentes:**
+
+* Unai Llagostera
+* Samuel Moscoso
+* Asier Barranco
+
+---
+
+## 1. Orden del Día
+
+1. Lectura del enunciado del proyecto (P0.1) y análisis de requisitos.
+2. **Sprint Planning:** Definición del alcance del Sprint 1.
+3. **Estudio Tecnológico:** Debate y selección de infraestructura (AWS vs Local) y Software (Apache vs Nginx).
+4. Creación del Backlog y asignación de tareas iniciales.
+
+---
+
+## 2. Desarrollo de la Reunión y Acuerdos
+
+### 2.1. Análisis del ProyectoSe revisa la documentación del proyecto "Extagram". El equipo acuerda adoptar la metodología **Scrum**.
+
+* **Objetivo Global:** Desplegar una aplicación PHP heredada evolucionando de un monolito a microservicios con Docker.
+* **Objetivo Sprint 1:** Despliegue funcional del monolito LAMP en nube pública.
+
+### 2.2. Decisiones Tecnológicas (Tech Stack)
+
+Tras el debate (documentado en el *Estudio Tecnológico v1.3*), se toman las siguientes decisiones por unanimidad:
+
+* **Infraestructura:** Se utilizará **AWS EC2** (Instancia `t3.micro`) con Ubuntu 24.04 LTS. Se descarta IsardVDI por falta de realismo profesional.
+* **Servidor Web:** Estrategia **"Apache Full-Stack"**. Se usará Apache tanto para el monolito actual como para el balanceador futuro, simplificando la gestión.
+* **Base de Datos:** MySQL 8.0.
+* **Control de Costes:** Se aprueba el uso de `t3.micro` con configuración de SWAP (2GB) para optimizar el presupuesto de 50$.
+
+### 2.3. Sprint Planning (Sprint 1)
+
+Se definen las historias de usuario y tareas técnicas para alcanzar el MVP antes de la fecha límite. Se acuerda dividir el trabajo en:
+
+1. Infraestructura (Cloud).
+2. Configuración de Servidores (SysAdmin).
+3. Despliegue de Código (DevOps).
+
+---
+
+## 3. Asignación de Tareas (Backlog)
+
+Se han creado las siguientes tareas en el tablero del proyecto y se asignan responsables para ejecutar antes de la revisión del **Martes a las 16:45**:
+
+| ID | Tarea | Responsable | Estado |
+| --- | --- | --- | --- |
+| **1.1** | Creación de Repositorio Git y estructura de directorios (`/docs`, `/src`). | *[Nombre]* | *Done* |
+| **1.2** | Redacción del Estudio Tecnológico y Justificación de AWS. | *[Nombre]* | *In Progress* |
+| **1.3** | **AWS:** Lanzamiento de instancia EC2 (VPC, Security Groups, KeyPairs). | *[Nombre]* | *In Progress* |
+| **1.4** | **SysAdmin:** Scripting de `User Data` para instalación desatendida de LAMP. | *[Nombre]* | *To Do* |
+| **1.5** | **BBDD:** Configuración de MySQL, creación de usuario y restauración del `.sql`. | *[Nombre]* | *To Do* |
+| **1.6** | **Deploy:** Subida de código PHP vía Git/SFTP y configuración de VirtualHost. | *[Nombre]* | *To Do* |
+
+---
+
+## 4. Próximos Pasos
+
+* **Revisión de Avance (Daily/Checkpoint):** Martes 17/12 a las 16:45.
+* **Objetivo para la revisión:** Tener la instancia corriendo, con IP pública accesible, las tareas asignadas para cada uno empezadas y con ideas claras.
+
 #### Acta 12/01/2026
 
 #### Acta 22/01/2026
