@@ -22,3 +22,4 @@ Se aprovisionará una única máquina virtual (Instancia EC2) que alojará la pi
 
 Al tratarse de un despliegue en una sola máquina, la topología de red es simplificada. No se requiere balanceo de carga ni subredes privadas complejas en esta fase.
 
+![Captura: Esquema de la infraestructura inicial](../../media/img/infraestructura_inicial.png)
