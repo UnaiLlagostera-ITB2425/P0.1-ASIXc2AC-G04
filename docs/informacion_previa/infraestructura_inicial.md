@@ -10,8 +10,8 @@ Este enfoque permite centrarse en la configuración base de los servicios, la va
 Se aprovisionará una única máquina virtual (Instancia EC2) que alojará la pila tecnológica completa (LAMP).
 
 * **Proveedor Cloud:** AWS (Amazon Web Services).
-* **Recurso de Cómputo:** Instancia EC2 (p.ej., t2.micro o t3.micro para capa gratuita).
-* **Sistema Operativo:** Linux (Ubuntu Server o Amazon Linux recomendados).
+* **Recurso de Cómputo:** Instancia EC2 (t3.micro).
+* **Sistema Operativo:** Linux (Ubuntu Server).
 
 ### Componentes de Software (Instalados en la instancia)
 1.  **Servidor Web:** Apache. Actuará como punto de entrada para las peticiones HTTP.
