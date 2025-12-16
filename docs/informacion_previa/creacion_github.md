@@ -20,17 +20,17 @@ Antes de trabajar en local, debemos crear el contenedor remoto del proyecto.
 Para mantener el orden requerido en la documentación y los recursos multimedia, organizaremos el proyecto siguiendo esta estructura estándar:
 
 ```text
-Extagram_Project/
+P0.1-ASIXc2AC-G04/
 ├── docs/                      # Documentación técnica del proyecto
 │   ├── configuracion/         # Archivos de configuración y variables
 │   ├── despliegue/            # Guías de instalación y deploy
-│   ├── informacion_previa/    # Investigación y análisis previo (Sprint 1)
-│   └── manuales/              # Guías de uso y mantenimiento
+│   ├── informacion_previa/    # Investigación y análisis previo 
+│   └── manuales/              # Guías de uso y creación/mantenimiento
 ├── media/                     # Recursos visuales para la documentación
 │   ├── gif/                   # Animaciones de funcionamiento
 │   ├── img/                   # Capturas de pantalla y diagramas
 │   └── video/                 # Demos o grabaciones
-└── readme.md                  # Portada y resumen del proyecto
+└── readme.md                  # Portada/index del proyecto
 ```
 
 > ❗Esta estructura puede modificarse según conveniencia del administrador/equipo dev
