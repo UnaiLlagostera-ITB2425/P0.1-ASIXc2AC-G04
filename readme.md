@@ -36,6 +36,8 @@ Utilizamos la metodología **Agile** para la gestión de tareas, coordinando el 
 | **Sprint 2** | 19/1/26 - 27/1/26 | Despliegue de servidores web (Nginx/PHP) y base de datos. |
 | **Sprint 3** | 2/2/26 - 10/2/26 | Implementación de Balanceador, NFS y puesta en producción final. |
 
+---
+
 ## Actas
 
 #### Acta 15/12/2025
