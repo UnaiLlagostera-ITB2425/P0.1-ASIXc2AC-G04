@@ -29,5 +29,5 @@ Luego abre en el navegador:
 `http://52.21.109.232`
 
 <div align="center">
-  <img src="../../media/despl_web.png" alt="Acceso web">
+  <img src="../../media/img/despl_web.png" alt="Acceso web">
 </div>
