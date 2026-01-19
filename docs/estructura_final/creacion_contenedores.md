@@ -536,10 +536,10 @@ services:
     image: mysql:8.0
     container_name: S7-mysql-db
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: app_db
-      MYSQL_USER: app_user
-      MYSQL_PASSWORD: app_password
+      MYSQL_ROOT_PASSWORD: '##############'
+      MYSQL_DATABASE: extagram_db
+      MYSQL_USER: extagram_admin
+      MYSQL_PASSWORD: '##############'
       MYSQL_INITDB_SKIP_TZINFO: "yes"
     volumes:
       - mysql_data:/var/lib/mysql
