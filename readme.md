@@ -40,8 +40,6 @@ Utilizamos la metodología **Agile** para la gestión de tareas, coordinando el 
 
 ## Actas
 
-#### Acta 15/12/2025
-
 ---
 
 # Acta de Reunión #01: Kick-off y Sprint Planning**Proyecto:** Extagram
@@ -112,7 +110,6 @@ Se han creado las siguientes tareas en el tablero del proyecto y se asignan resp
 * **Revisión de Avance (Daily/Checkpoint):** Martes 17/12 a las 16:45.
 * **Objetivo para la revisión:** Tener la instancia corriendo, con IP pública accesible, las tareas asignadas para cada uno empezadas y con ideas claras.
 
-#### Acta 19/01/2026
 
 # Acta de Reunión #02: Sprint Review #01 & Sprint Planning #02
 
