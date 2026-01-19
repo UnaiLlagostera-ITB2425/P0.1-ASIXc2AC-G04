@@ -137,5 +137,69 @@ Para que el apache identifique el extagram.php como archivo index deberemos de a
 ```bash
 DirectoryIndex extagram.php
 ```
+## Configuración certificados ssl (https)
 
+
+### Activación de HTTPS con certificado autofirmado
+
+Primero generé un certificado SSL autofirmado para Apache usando OpenSSL, creando la clave privada y el certificado en las rutas estándar del sistema:
+
+```bash
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/ssl/private/clavessh.key \
+  -out /etc/ssl/certs/clavessh.crt
+```
+
+Después habilité el módulo SSL y el sitio HTTPS por defecto:
+
+```bash
+sudo a2enmod ssl
+sudo a2ensite default-ssl.conf
+sudo systemctl reload apache2
+```
+
+En el `default-ssl.conf` configuré Apache para usar estos ficheros al atender peticiones HTTPS en el puerto 443:
+
+```apache
+<VirtualHost _default_:443>
+    ServerName webmaster@localhost
+	DirectoryIndex extagram.php
+    DocumentRoot /var/www/html
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/clavessh.crt
+    SSLCertificateKeyFile /etc/ssl/private/clavessh.key
+</VirtualHost>
+```
+
+### Redirección de HTTP a HTTPS
+
+Para que todo el tráfico vaya siempre cifrado, añadí una redirección permanente en el VirtualHost del puerto 80:[web:19][web:22]
+
+```apache
+<VirtualHost *:80>
+    ServerName webmaster@localhost
+	DirectoryIndex extagram.php
+    DocumentRoot /var/www/html
+
+    # Redirigir todo HTTP a HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]	
+
+</VirtualHost>
+```
+
+Finalmente comprobé la configuración y recargué Apache:[web:23]
+
+```bash
+sudo apachectl -t
+sudo systemctl reload apache2
+```
+
+### Ventajas de usar HTTPS y redirección
+
+Configurar HTTPS con certificado (aunque sea autofirmado) permite cifrar el tráfico entre cliente y servidor, evitando que credenciales y datos sensibles viajen en texto claro por la red. Además, garantiza la integridad de las respuestas, reduciendo el riesgo de manipulaciones o inyecciones de contenido por atacantes intermedios.
+
+Al forzar la redirección de HTTP a HTTPS se asegura que todos los usuarios utilicen siempre la conexión cifrada, incluso si escriben o tienen guardado el enlace con `http://` Esto unifica el acceso al sitio, evita versiones inseguras de la página y mejora la percepción de seguridad al mostrar el candado en el navegador.
 
