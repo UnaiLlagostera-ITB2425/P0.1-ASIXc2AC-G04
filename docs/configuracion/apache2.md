@@ -3,10 +3,6 @@
 
 Una vez instalado el servicio añadimos los archivos de php,los cuales nos ha proporcionado el profesorado
 
-<div>
-  <img>
-</div>
-
 **extagram.php**
 ```bash
 <!DOCTYPE html>
