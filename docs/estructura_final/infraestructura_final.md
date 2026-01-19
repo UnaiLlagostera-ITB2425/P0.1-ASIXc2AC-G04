@@ -32,7 +32,7 @@ permitiendo resolución de nombres por hostname (S1, S2, etc.).
 
 ## 3. Esquema de Red y Flujo de Peticiones
 
-
+![Captura: Esquema de la infraestructura final](../../media/img/infra_avanzada.png)
 
 **Flujo detallado:**
 - **Entrada**: Browser → **S1**:80 (todas las peticiones HTTP)
@@ -52,4 +52,4 @@ permitiendo resolución de nombres por hostname (S1, S2, etc.).
 | **Separación Responsabilidades** | Estáticos (S5/S6) no sobrecargan backends PHP |
 | **Gestión Docker** | `docker-compose up --scale s2=3` para auto-escala |
 
-Esta arquitectura representa la **evolución completa** desde monolito → microservicios con balanceo, típica en proyectos ASIR de producción. [ppl-ai-file-upload.s3.amazonaws](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/images/127669645/21314bc6-74c2-49a3-a984-05e2e7891023/image.jpg)
+Esta arquitectura representa la **evolución completa** desde monolito → microservicios con balanceo, típica en proyectos ASIR de producción.
