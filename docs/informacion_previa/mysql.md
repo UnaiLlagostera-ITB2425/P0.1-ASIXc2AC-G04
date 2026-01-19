@@ -1,33 +1,8 @@
-
----
-
-### 1. Instalación del Servidor de Base de Datos
-
-Para el almacenamiento de datos persistentes se ha seleccionado MySQL Server.
-
-* **Instalación del paquete:**
-
-```bash
-sudo apt install mysql-server -y
-
-```
-
-* **Asegurar el arranque:**
-
-```bash
-sudo systemctl enable mysql
-
-```
-
-> **Nota:** Se habilita el servicio mediante `systemctl enable` para garantizar que el motor de base de datos arranque automáticamente si el servidor se reinicia.
-
----
-
-### 2. Configuración de la Base de Datos
+### 1. Configuración de la Base de Datos
 
 **Objetivo:** Crear la estructura de datos necesaria (`extagram_db`), el usuario administrador (`extagram_admin`) y la tabla `posts` requerida por el código fuente.
 
-#### 2.1 Acceso a MySQL
+#### 1.1 Acceso a MySQL
 
 En Ubuntu 24.04, el usuario root de MySQL utiliza autenticación por *socket* por defecto.
 
@@ -38,7 +13,7 @@ sudo mysql
 
 ```
 
-#### 2.2 Creación de la Base de Datos
+#### 1.2 Creación de la Base de Datos
 
 Se genera el contenedor lógico para la información de la aplicación.
 
@@ -49,7 +24,7 @@ CREATE DATABASE extagram_db;
 
 ```
 
-#### 2.3 Creación de Usuario y Asignación de Credenciales
+#### 1.3 Creación de Usuario y Asignación de Credenciales
 
 Por motivos de seguridad, se crea un usuario específico para la aplicación, evitando el uso de credenciales `root` en el entorno web.
 
@@ -60,7 +35,7 @@ CREATE USER 'extagram_admin'@'localhost' IDENTIFIED BY '#######';
 
 ```
 
-#### 2.4 Asignación de Privilegios
+#### 1.4 Asignación de Privilegios
 
 Se limita el acceso del usuario únicamente a la base de datos del proyecto.
 
@@ -74,7 +49,7 @@ FLUSH PRIVILEGES;
 
 > **Nota:** Se ejecuta `FLUSH PRIVILEGES` para recargar la tabla de permisos inmediatamente y hacer efectivos los cambios.
 
-#### 2.5 Creación del Esquema de Tablas
+#### 1.5 Creación del Esquema de Tablas
 
 Se define la estructura de la tabla basándose en los requerimientos del código PHP (campos de texto para el contenido y la URL de la imagen).
 
@@ -95,7 +70,7 @@ CREATE TABLE posts (
 
 ```
 
-#### 2.6 Verificación
+#### 1.6 Verificación
 
 Se comprueba que la estructura se ha creado correctamente.
 
