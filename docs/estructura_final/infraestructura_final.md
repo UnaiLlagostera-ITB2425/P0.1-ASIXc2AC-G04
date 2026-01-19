@@ -32,7 +32,7 @@ permitiendo resolución de nombres por hostname (S1, S2, etc.).
 
 ## 3. Esquema de Red y Flujo de Peticiones
 
-![Captura: Esquema de la infraestructura final](../../media/img/infra_avanzada.png)
+![Captura: Esquema de la infraestructura final](../../media/img/Infraestructura_avanzada.png)
 
 **Flujo detallado:**
 - **Entrada**: Browser → **S1**:80 (todas las peticiones HTTP)
