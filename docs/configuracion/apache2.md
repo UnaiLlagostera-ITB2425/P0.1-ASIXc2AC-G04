@@ -3,10 +3,6 @@
 
 Una vez instalado el servicio añadimos los archivos de php,los cuales nos ha proporcionado el profesorado
 
-<div>
-  <img>
-</div>
-
 **extagram.php**
 ```bash
 <!DOCTYPE html>
@@ -203,3 +199,6 @@ Configurar HTTPS con certificado (aunque sea autofirmado) permite cifrar el trá
 
 Al forzar la redirección de HTTP a HTTPS se asegura que todos los usuarios utilicen siempre la conexión cifrada, incluso si escriben o tienen guardado el enlace con `http://` Esto unifica el acceso al sitio, evita versiones inseguras de la página y mejora la percepción de seguridad al mostrar el candado en el navegador.
 
+<div align="center">
+  <img src="../../media/img/despl_web2.png" alt="Acceso web">
+</div>
