@@ -5,7 +5,7 @@ Una vez instalado el servicio añadimos los archivos de php,los cuales nos ha pr
 
 **extagram.php**
 ```bash
-!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Extagram</title>
@@ -14,7 +14,7 @@ Una vez instalado el servicio añadimos los archivos de php,los cuales nos ha pr
 <body>
     <form method="POST" enctype="multipart/form-data" action="upload.php">
         <input type="text" name="post" placeholder="Write something...">
-        <input id="file" type="file" name="photo" onchange="document.getElement>
+        <input id="file" type="file" name="photo" onchange="document.getElementById('preview').src=window.URL.createObjectURL(event.target.files[0])">
         <label for="file">
              <img id="preview" src="preview.svg">
         </label>
@@ -75,46 +75,46 @@ Comentario del codigo:
 **style.css**
 ```bash
 body {
-	background: #fafafa;
-	font-family: sans;
-	margin: 0;
+        background: #fafafa;
+        font-family: sans;
+        margin: 0;
 }
  form {
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	gap: 1em;
-	background: white;
-	border-bottom: 1px solid #dbdbdb;
-	padding: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1em;
+        background: white;
+        border-bottom: 1px solid #dbdbdb;
+        padding: 8px;
 }
  input[type=text] {
-	border: 1px solid #dbdbdb;
-	padding: 8px;
-	width: 300px;
+        border: 1px solid #dbdbdb;
+        padding: 8px;
+        width: 300px;
 } 
 input[type=submit] {
-	background: #0096f7;
-	color: white;
-	border: 0;
-	border-radius: 3px;
-	width: 300px;
-	padding: 8px;
+        background: #0096f7;
+        color: white;
+        border: 0;
+        border-radius: 3px;
+        width: 300px;
+        padding: 8px;
 } 
 #file { display: none; }
  
 #preview { max-width: 300px; }
  
 .post {
-	max-width: 600px;
-	margin: 0 auto;
-	background: white;
-	display: flex;
-	flex-direction: column;
-	border: 1px solid #dbdbdb;
-	border-radius: 3px;
-	margin-bottom: 24px;
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #dbdbdb;
+        border-radius: 3px;
+        margin-bottom: 24px;
 }
  
 .post img { max-width: 600px; }
@@ -225,4 +225,5 @@ Al forzar la redirección de HTTP a HTTPS se asegura que todos los usuarios util
 
 <div align="center">
   <img src="../../media/img/despl_web2.png" alt="Acceso web">
+
 </div>
