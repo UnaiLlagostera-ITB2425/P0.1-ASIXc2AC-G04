@@ -5,30 +5,42 @@ Una vez instalado el servicio añadimos los archivos de php,los cuales nos ha pr
 
 **extagram.php**
 ```bash
-<!DOCTYPE html>
-<link rel="stylesheet" href="style.css">
- 
-<form method="POST" enctype="multipart/form-data" action="upload.php">
-	<input type="text" name="post" placeholder="Write something...">
-	<input id="file" type="file" name="photo" onchange="document.getElementById('preview').src=window.URL.createObjectURL(event.target.files[0])">
-	<label for="file">
-                	 <img id="preview" src="preview.svg">
-	</label>
-	<input type="submit" value=”Publish”>
-</form>
-<?php
-require_once 'db_config.php';
-$db = new mysqli($servername, $username, $password, $dbname);;
- 
-foreach ($db->query("SELECT * FROM posts") as $fila) {
-                	echo "<div class='post'>";
-                	echo "<p>".$fila['post']."</p>";
-                	if (!empty($fila['photourl'])) {
-	            	    echo "<img src='https://storage.extagram.itb/".$fila['photourl']."'>";
-                	}
-                	echo "</div>";
-}
-?>
+!DOCTYPE html>
+<html>
+<head>
+    <title>Extagram</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <form method="POST" enctype="multipart/form-data" action="upload.php">
+        <input type="text" name="post" placeholder="Write something...">
+        <input id="file" type="file" name="photo" onchange="document.getElement>
+        <label for="file">
+             <img id="preview" src="preview.svg">
+        </label>
+        <input type="submit" value="Publicar">
+    </form>
+
+    <?php
+    require_once 'db_config.php';
+    
+    $db = new mysqli($servername, $username, $password, $dbname); 
+
+    if ($db->connect_error) {
+        die("Connection failed: " . $db->connect_error);
+    }
+
+    foreach ($db->query("SELECT * FROM posts") as $fila) {
+        echo "<div class='post'>";
+        echo "<p>".$fila['post']."</p>";
+        if (!empty($fila['photourl'])) {
+            echo "<img src='uploads/".$fila['photourl']."'>";
+        }
+        echo "</div>";
+    }
+    ?>
+</body>
+</html>
 ```
 Comentario del codigo:
   
@@ -38,17 +50,18 @@ Comentario del codigo:
 ```bash
 <?php
 if (!empty($_POST["post"])) {
- 
-	$photoid;
-	if(!empty($_FILES['photo']['name'])){
-    	$photoid = uniqid();
+        require_once 'db_config.php';
+        $db = new mysqli($servername, $username, $password, $dbname);;
+        $photoid;
+        if(!empty($_FILES['photo']['name'])){
+        $photoid = uniqid();
         move_uploaded_file($_FILES['photo']['tmp_name'], 'uploads/' . $photoid);
-	}
-	$db = new mysqli("db.extagram.itb", "extagram_admin", "Contraseña (Preguntar al administrador)", "extagram_db");
-	$stmt = $db->prepare("INSERT INTO posts VALUES(?,?)");
-	$stmt->bind_param("ss", $_POST["post"], $photoid);
-	$stmt->execute();
-	$stmt->close();
+        }
+
+        $stmt = $db->prepare("INSERT INTO posts VALUES(?,?)");
+        $stmt->bind_param("ss", $_POST["post"], $photoid);
+        $stmt->execute();
+        $stmt->close();
 }
  
 header("location: /");
@@ -127,6 +140,17 @@ Comentario del codigo:
   Icono SVG inline de cámara bien optimizado (100x100 viewBox escalable)
 
 ---
+
+**db_config.php**
+
+```bash
+<?php
+$servername = "localhost";
+$username = "extagram_admin";
+$password = "P0.1_G04";
+$dbname = "extagram_db";
+?>
+```
 
 Para que el apache identifique el extagram.php como archivo index deberemos de añadir al archivo de nuestra pagina web (vhost)
 
