@@ -191,6 +191,7 @@ networks:
 ```
 
 **Función**: desacopla la carga de servir archivos estáticos del servidor de aplicación. Está optimizado solo para entregar archivos rápidamente sin ejecutar PHP ni operaciones pesadas. Otros servicios acceden a los assets por HTTP a través de la red Docker compartida.
+
 ---
 
 ### S7: Servidor MySQL para Base de Datos
