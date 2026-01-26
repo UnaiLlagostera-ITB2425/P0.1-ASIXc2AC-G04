@@ -1,211 +1,229 @@
-# Creación de Dockers Multi-Servicio en AWS
+# Infraestructura de Microservicios
 
-## ¿Por qué Docker?
+## 1. Visión Global de la Arquitectura
 
-Docker nos permite **containerizar cada servicio de forma independiente**, garantizando que:
-- Cada componente (Apache, PHP-FPM, MySQL) está **aislado** en su propio contenedor
-- Se **escala fácilmente** (puedes añadir más instancias de S2/S3 sin complicaciones)
-- La **reproducibilidad** es garantizada (mismo código = mismo comportamiento en cualquier máquina)
-- La **configuración es versionable** (todo en archivos YAML)
-- Se **simplifica el despliegue** en AWS (orquestación clara y predecible)
-- Se **reducen dependencias** del sistema host (no necesitas instalar PHP, Apache, MySQL directamente)
+En este Sprint se ha realizado la migración de una arquitectura monolítica a una arquitectura de microservicios contenerizada. El sistema se ha dividido en **7 contenedores (S1-S7)**, cada uno con una responsabilidad única, orquestados mediante Docker Compose.
 
-En resumen: **una aplicación modular, portable y fácil de mantener**.
+**Diagrama de Servicios:**
 
----
-
-## Descripción General
-
-Esta configuración despliega una aplicación web completa con:
-
-- **S1**: Apache como proxy inverso (punto de entrada público)
-- **S2 + S3**: PHP-FPM con balanceado de carga para `extagram.php`
-- **S4**: PHP-FPM para gestión de uploads
-- **S5**: Apache sirviendo imágenes estáticas (uploads)
-- **S6**: Apache sirviendo CSS/SVG estáticos
-- **S7**: MySQL Base de datos
-
-Todos los servicios corren en **contenedores Docker** dentro de una **red interna** en AWS EC2.
+* **S1 (Proxy):** Puerta de entrada (Balanceador de carga).
+* **S2 & S5 (Backend):** Aplicación Web PHP (Escalabilidad horizontal).
+* **S4 (CDN/Storage):** Servidor dedicado para servir imágenes estáticas.
+* **S7 (Datos):** Base de Datos MySQL.
+* **S3 (Gestión):** Interfaz visual para la Base de Datos.
+* **S6 (Mantenimiento):** Servicio de Backups automatizados.
 
 ---
 
-## Arquitectura
+## 2. Definición Detallada de Contenedores
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        AWS EC2 Instance                     │
-│                                                             │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │              Docker Network (app-network)            │   │
-│  │                                                      │   │
-│  │  ┌─────────────────────────────────────────────┐     │   │
-│  │  │ S1: Apache Proxy (80, 443)                  │     │   │
-│  │  │ Entrada pública - Balanceador de carga      │     │   │
-│  │  └───────────┬─────────────────────────────────┘     │   │
-│  │              │                                       │   │
-│  │    ┌─────────┼──────────────┬────────────────┐       │   │
-│  │    ▼         ▼              ▼                ▼       │   │
-│  │ ┌────────────────┐  ┌──────────────┐  ┌──────────┐   │   │
-│  │ │ S2: PHP-FPM 1  │  │ S4: PHP-FPM  │  │S5: Apache│   │   │
-│  │ │ extagram.php   │  │ upload.php   │  │Images    │   │   │
-│  │ └────────────────┘  └──────────────┘  └──────────┘   │   │
-│  │         ▲                                            │   │
-│  │    ┌────┴───────────┐                                │   │
-│  │    │                │                                │   │
-│  │ ┌──────────────┐  ┌──────────┐  ┌──────────────┐     │   │
-│  │ │ S3: PHP-FPM  │  │S6: Apache│  │ S7: MySQL    │     │   │
-│  │ │ extagram.php │  │Assets    │  │ Base datos   │     │   │
-│  │ └──────────────┘  └──────────┘  └──────────────┘     │   │
-│  │                                                      │   │
-│  │          Volúmenes Compartidos:                      │   │
-│  │          - shared-uploads (S4, S5)                   │   │
-│  │          - mysql_data (S7)                           │   │
-│  └──────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+### S1: Proxy Inverso y Balanceador de Carga
+
+**Imagen:** `nginx:alpine`
+**Función:** Es el único punto de acceso público (Puerto 80). Recibe las peticiones del usuario y las distribuye entre los backends (S2 y S5) para balancear la carga, o hacia S4 para pedir imágenes.
+
+**Configuración (`S1/nginx.conf`):**
+
+```nginx
+events {}
+http {
+    upstream backend_cluster {
+        server S2-backend-1:80;
+        server S5-backend-2:80;
+    }
+
+    server {
+        listen 80;
+        
+        # Redirigir tráfico PHP al clúster de backends
+        location / {
+            proxy_pass http://backend_cluster;
+            proxy_set_header Host $host;
+        }
+
+        # Servir imágenes directamente desde el contenedor de almacenamiento S4
+        location /uploads/ {
+            proxy_pass http://S4-backend-upload:80/uploads/;
+        }
+    }
+}
+
 ```
 
 ---
 
-## Estructura de Directorios
+### 🚀 S2: Backend Principal (Extagram App)
 
-```text
-proyecto-docker/
-├─ S1/
-│  ├─ docker-compose.yml
-│  ├─ conf/
-│  │  └─ proxy.conf
-│  └─ logs/
-├─ S2/
-│  ├─ docker-compose.yml
-│  ├─ Dockerfile
-│  └─ app/
-│     ├─ extagram.php
-│     └─ index.php
-├─ S3/
-│  ├─ docker-compose.yml
-│  ├─ Dockerfile
-│  └─ app/
-│     ├─ extagram.php
-│     └─ index.php
-├─ S4/
-│  ├─ docker-compose.yml
-│  ├─ Dockerfile
-│  └─ app/
-│     └─ upload.php
-├─ S5/
-│  ├─ docker-compose.yml
-│  ├─ conf/
-│  │  └─ httpd-images.conf
-│  └─ logs/
-├─ S6/
-│  ├─ docker-compose.yml
-│  ├─ conf/
-│  │  └─ httpd-assets.conf
-│  ├─ assets/
-│  │  ├─ style.css
-│  │  └─ preview.svg
-│  └─ logs/
-├─ S7/
-│  ├─ docker-compose.yml
-│  ├─ init.sql
-│  └─ data/
-└─ launch.sh                   (script para lanzar todo)
+**Imagen:** `Dockerfile` (Personalizado PHP 8.0 + MySQLi)
+**Función:** Procesa la lógica de negocio (PHP), gestiona la autenticación y procesa la subida de archivos. Escribe los archivos físicos en un **Volumen Compartido** para que S4 pueda verlos.
+
+**Dockerfile (`S2/Dockerfile`):**
+
+```dockerfile
+FROM php:8.0-apache
+RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
+RUN a2enmod rewrite
+COPY src/ /var/www/html/
+RUN chown -R www-data:www-data /var/www/html/
+
 ```
 
 ---
 
-## Configuración de Cada Servicio
+### 🗄️ S3: Administración de Base de Datos
 
+**Imagen:** `phpmyadmin/phpmyadmin`
+**Función:** Proporciona una interfaz gráfica web para gestionar la base de datos `extagram_db` en S7 sin necesidad de usar la terminal. Útil para depuración y mantenimiento.
 
+**Variables de Entorno Clave:**
 
+* `PMA_HOST`: S7-mysql-db
+* `PMA_USER`: extagram_admin
+* `PMA_PASSWORD`: P0.1_G04
 
+---
 
+### 🖼️ S4: Servidor de Archivos Estáticos (Uploads)
 
+**Imagen:** `httpd:alpine` (Apache ligero) o `nginx:alpine`
+**Nombre del contenedor:** `S4-backend-upload`
+**Función:** Servir las imágenes de manera eficiente. Este contenedor **NO** procesa PHP, solo entrega archivos `.jpg`, `.gif`, etc.
+**Montaje:** Tiene montado el volumen `shared-uploads` en su raíz web.
 
+*Nota: Este es el contenedor donde verificamos los archivos con `ls`.*
 
+---
 
+### 🔄 S5: Backend Replica (Alta Disponibilidad)
 
+**Imagen:** Misma construcción que **S2**.
+**Función:** Es un clon exacto de S2. Si S2 se cae o está saturado, S1 envía el tráfico a S5. Garantiza que la aplicación siga funcionando. Comparte el mismo código y el mismo volumen de uploads.
 
-### S5: Servidor Apache para Gestión de Uploads
+---
 
-```text
-S5/
-└── docker-compose.yml
+### 🛡️ S6: Servicio de Backup
+
+**Imagen:** `alpine:latest`
+**Función:** Contenedor de utilidad que ejecuta tareas programadas (cron) para realizar copias de seguridad de la base de datos S7.
+
+**Comando de ejecución:**
+Instala el cliente mysql y ejecuta `mysqldump` periódicamente, guardando los `.sql` en un volumen seguro.
+
+---
+
+### 💾 S7: Base de Datos Maestra
+
+**Imagen:** `mysql:8.0`
+**Función:** Almacena toda la información persistente.
+
+**Archivo `S7/init.sql`:**
+
+```sql
+CREATE DATABASE IF NOT EXISTS extagram_db;
+USE extagram_db;
+CREATE TABLE IF NOT EXISTS posts (post TEXT, photourl TEXT);
+CREATE USER 'extagram_admin'@'%' IDENTIFIED BY 'P0.1_G04';
+GRANT ALL PRIVILEGES ON extagram_db.* TO 'extagram_admin'@'%';
+FLUSH PRIVILEGES;
+
 ```
 
-**Archivo: `S5/docker-compose.yml`**
+---
+
+## 3. Orquestación (Docker Compose)
+
+Este archivo `docker-compose.yml` despliega toda la infraestructura descrita anteriormente.
 
 ```yaml
+version: '3.8'
+
 services:
-  apache-images:
-    image: httpd:2.4
-    container_name: S5-apache-images
+  # --- S1: BALANCEADOR DE CARGA (Nginx) ---
+  proxy:
+    image: nginx:alpine
+    container_name: S1-proxy
+    ports:
+      - "80:80" # Único puerto expuesto al exterior
     volumes:
-      - shared-uploads:/usr/local/apache2/htdocs/uploads
+      - ./S1/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend-1
+      - backend-2
+      - upload-server
     networks:
       - app-network
-    restart: unless-stopped
 
-networks:
-  app-network:
-    external: true
-
-volumes:
-  shared-uploads:
-    external: true
-```
-
-**Función**: servir archivos subidos por usuarios (imágenes, fotos de posts). Utiliza un volumen Docker compartido `shared-uploads` que es accesible desde otros contenedores (como S2, que es donde se suben los archivos). De esta forma, cuando un usuario sube una imagen en Extagram (S2), se guarda en el volumen `shared-uploads`, y S5 la sirve por HTTP. Los otros servicios acceden a las imágenes usando `http://S5-apache-images/uploads/nombre-imagen.jpg` a través de la red Docker compartida `app-network`.
-
----
-
-### S6: Assets estáticos
-
-```text
-S6/
-├── docker-compose.yml
-└── assets/
-    ├── preview.svg
-    └── style.css
-```
-
-**Archivo: `S6/docker-compose.yml`**
-
-```yaml
-version: "3.9"
-
-services:
-  apache-assets:
-    image: httpd:2.4
-    container_name: S6-apache-assets
+  # --- S2: BACKEND 1 (PHP App) ---
+  backend-1:
+    build: ./S2
+    container_name: S2-backend-1
+    restart: always
     volumes:
-      - ./assets:/usr/local/apache2/htdocs
+      - ./S2/src:/var/www/html        # Código fuente
+      - shared-uploads:/var/www/html/uploads # Volumen compartido imágenes
+    environment:
+      - DB_HOST=S7-mysql-db
     networks:
       - app-network
-    restart: unless-stopped
+    depends_on:
+      mysql-db:
+        condition: service_healthy
 
-networks:
-  app-network:
-    external: true
-```
+  # --- S3: PHPMYADMIN (GUI DB) ---
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: S3-phpmyadmin
+    ports:
+      - "8080:80" # Acceso directo a admin en puerto 8080
+    environment:
+      PMA_HOST: S7-mysql-db
+      PMA_USER: extagram_admin
+      PMA_PASSWORD: P0.1_G04
+    networks:
+      - app-network
 
-**Función**: desacopla la carga de servir archivos estáticos del servidor de aplicación. Está optimizado solo para entregar archivos rápidamente sin ejecutar PHP ni operaciones pesadas. Otros servicios acceden a los assets por HTTP a través de la red Docker compartida.
+  # --- S4: STORAGE SERVER (Archivos Estáticos) ---
+  upload-server:
+    image: httpd:alpine
+    container_name: S4-backend-upload
+    volumes:
+      - shared-uploads:/usr/local/apache2/htdocs/uploads # Lee lo que S2 escribe
+    networks:
+      - app-network
 
----
+  # --- S5: BACKEND 2 (Réplica) ---
+  backend-2:
+    build: ./S2 # Usa el mismo Dockerfile que S2
+    container_name: S5-backend-2
+    restart: always
+    volumes:
+      - ./S2/src:/var/www/html
+      - shared-uploads:/var/www/html/uploads
+    networks:
+      - app-network
+    depends_on:
+      mysql-db:
+        condition: service_healthy
 
-### S7: Servidor MySQL para Base de Datos
+  # --- S6: BACKUP SERVICE ---
+  backup-service:
+    image: alpine:latest
+    container_name: S6-backup
+    command: >
+      sh -c "apk add --no-cache mysql-client &&
+             while true; do
+               mysqldump -h S7-mysql-db -u extagram_admin -pP0.1_G04 extagram_db > /backups/backup_$(date +%s).sql;
+               echo 'Backup realizado';
+               sleep 86400; # Cada 24 horas
+             done"
+    volumes:
+      - ./backups:/backups
+    networks:
+      - app-network
+    depends_on:
+      - mysql-db
 
-```text
-S7/
-├── docker-compose.yml
-└── init.sql
-```
-
-**Archivo: `S7/docker-compose.yml`**
-
-```yaml
-services:
+  # --- S7: BASE DE DATOS (MySQL) ---
   mysql-db:
     image: mysql:8.0
     container_name: S7-mysql-db
@@ -214,43 +232,53 @@ services:
       MYSQL_DATABASE: extagram_db
       MYSQL_USER: extagram_admin
       MYSQL_PASSWORD: P0.1_G04
-      MYSQL_INITDB_SKIP_TZINFO: "yes"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./S7/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
-    restart: unless-stopped
 
+# --- REDES Y VOLÚMENES ---
 networks:
   app-network:
-    external: true
+    driver: bridge
 
 volumes:
-  mysql_data:
-    external: true
+  mysql_data:      # Persistencia de BBDD
+  shared-uploads:  # Volumen mágico compartido entre S2, S4 y S5
+
 ```
-
-**Archivo: `S7/init.sql`**
-
-```sql
-CREATE DATABASE IF NOT EXISTS extagram_db;
-USE extagram_db;
-
-CREATE TABLE IF NOT EXISTS posts (
-    post TEXT,
-    photourl TEXT
-);
-
-CREATE USER IF NOT EXISTS 'extagram_admin'@'%' IDENTIFIED BY 'P0.1_G04';
-GRANT ALL PRIVILEGES ON extagram_db.* TO 'extagram_admin'@'%';
-FLUSH PRIVILEGES;
-```
-
-**Función**: contenedor MySQL 8.0 que aloja la base de datos `extagram_db`. Al iniciar, ejecuta automáticamente `init.sql` para crear las tablas y el usuario. Los datos persisten en el volumen `mysql_data` (externo). El healthcheck verifica continuamente que MySQL esté disponible. Se conecta a `app-network` permitiendo que otros servicios como S2 (Extagram) accedan a la base de datos usando `S7-mysql-db` como hostname. Las credenciales son usuario `extagram_admin` con contraseña `P0.1_G04`.
 
 ---
+
+## 4. Estructura de Archivos Final
+
+```text
+proyecto/
+├── docker-compose.yml
+├── backups/               (Carpeta local para dumps de S6)
+├── S1/
+│   └── nginx.conf         (Config del balanceador)
+├── S2/                    (Sirve para construir S2 y S5)
+│   ├── Dockerfile
+│   └── src/
+│       ├── index.php      (La Galería Pro)
+│       ├── upload.php     (Lógica de subida)
+│       ├── db_config.php  (Apunta a S7-mysql-db)
+│       └── .htaccess      (Límites 20MB)
+└── S7/
+    └── init.sql           (Script inicial DB)
+
+```
+
+## 5. Conclusión Técnica
+
+Con esta configuración se ha logrado un entorno **altamente disponible y desacoplado**.
+
+1. Si el contenedor **S2** falla, **S1** redirige a **S5**.
+2. Si borramos los contenedores Web, las imágenes persisten en el volumen `shared-uploads` (servido por **S4**) y los datos en `mysql_data` (servido por **S7**).
+3. Tenemos una estrategia de seguridad de datos con **S6** realizando backups automáticos.
