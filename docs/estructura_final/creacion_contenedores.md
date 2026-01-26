@@ -129,7 +129,7 @@ services:
 
 networks:
   app-network:
-    external: true
+    external: trueño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.
 volumes:
   shared-uploads:
     external: true
@@ -148,7 +148,7 @@ services:
     build: .
     container_name: S4-backend-upload
     volumes:
-      - ../src:/var/www/html
+      - ../src:/var/www/htmlño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.
       - shared-uploads:/var/www/html/uploads
     networks:
       - app-network
@@ -261,7 +261,7 @@ El archivo de configuración define cómo se distribuye el tráfico basándose e
 
     # 2. Ruta de Subida (Operación Pesada) -> Va a S4
     ProxyPass "/upload.php" "http://S4-backend-upload/upload.php"
-    ProxyPassReverse "/upload.php" "http://S4-backend-upload/upload.php"
+    ProxyPassReverse "/upload.php" "http://S4-bño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.ackend-upload/upload.php"
 
     # 3. Balanceador de Carga (Tráfico Web General) -> Cluster S2 + S3
     <Proxy "balancer://mycluster">
