@@ -301,7 +301,11 @@ services:
     build: .
     container_name: S1-gateway
     ports:
-      - "80:80"  # Exposición pública
+      - "80:80"   # HTTP (lo usaremos para redirigir)
+      - "443:443" # HTTPS (Nuevo puerto seguro)
+    volumes:
+      # Montamos la carpeta de certificados dentro del contenedor
+      - ./certs:/usr/local/apache2/conf/certs:ro
     networks:
       - app-network
     restart: unless-stopped
