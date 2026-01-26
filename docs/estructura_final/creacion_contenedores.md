@@ -248,22 +248,40 @@ El archivo de configuración define cómo se distribuye el tráfico basándose e
 **Archivo: `S1/conf/extagram.conf`**
 
 ```apache
+# Bloque 1: Redirección forzosa de HTTP a HTTPS
 <VirtualHost *:80>
     ServerName localhost
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+</VirtualHost>
+
+# Bloque 2: Configuración HTTPS Segura
+<VirtualHost *:443>
+    ServerName localhost
+
+    # Activar SSL
+    SSLEngine on
+    SSLCertificateFile "/usr/local/apache2/conf/certs/server.crt"
+    SSLCertificateKeyFile "/usr/local/apache2/conf/certs/server.key"
+
     ProxyPreserveHost On
 
-    # 1. Rutas Estáticas (Assets e Imágenes) -> Van a S6 y S5
+    # --- RUTAS DE PROXY (Las mismas que tenías antes) ---
+
+    # 1. Assets (CSS/SVG)
     ProxyPass "/style.css" "http://S6-apache-assets/style.css"
     ProxyPassReverse "/style.css" "http://S6-apache-assets/style.css"
 
+    # 2. Imágenes subidas
     ProxyPass "/uploads/" "http://S5-apache-images/uploads/"
     ProxyPassReverse "/uploads/" "http://S5-apache-images/uploads/"
 
-    # 2. Ruta de Subida (Operación Pesada) -> Va a S4
+    # 3. Script de subida
     ProxyPass "/upload.php" "http://S4-backend-upload/upload.php"
-    ProxyPassReverse "/upload.php" "http://S4-bño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.ackend-upload/upload.php"
+    ProxyPassReverse "/upload.php" "http://S4-backend-upload/upload.php"
 
-    # 3. Balanceador de Carga (Tráfico Web General) -> Cluster S2 + S3
+    # 4. Balanceador de carga (Web principal)
     <Proxy "balancer://mycluster">
         BalancerMember "http://S2-backend-1:80"
         BalancerMember "http://S3-backend-2:80"
@@ -271,6 +289,7 @@ El archivo de configuración define cómo se distribuye el tráfico basándose e
     ProxyPass "/" "balancer://mycluster/"
     ProxyPassReverse "/" "balancer://mycluster/"
 </VirtualHost>
+
 
 ```
 
