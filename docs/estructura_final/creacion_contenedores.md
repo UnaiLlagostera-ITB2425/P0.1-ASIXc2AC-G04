@@ -52,7 +52,7 @@ http {
 
 ---
 
-### 🚀 S2: Backend Principal (Extagram App)
+### S2: Backend Principal (Extagram App)
 
 **Imagen:** `Dockerfile` (Personalizado PHP 8.0 + MySQLi)
 **Función:** Procesa la lógica de negocio (PHP), gestiona la autenticación y procesa la subida de archivos. Escribe los archivos físicos en un **Volumen Compartido** para que S4 pueda verlos.
@@ -70,7 +70,7 @@ RUN chown -R www-data:www-data /var/www/html/
 
 ---
 
-### 🗄️ S3: Administración de Base de Datos
+### S3: Administración de Base de Datos
 
 **Imagen:** `phpmyadmin/phpmyadmin`
 **Función:** Proporciona una interfaz gráfica web para gestionar la base de datos `extagram_db` en S7 sin necesidad de usar la terminal. Útil para depuración y mantenimiento.
@@ -83,7 +83,7 @@ RUN chown -R www-data:www-data /var/www/html/
 
 ---
 
-### 🖼️ S4: Servidor de Archivos Estáticos (Uploads)
+### S4: Servidor de Archivos Estáticos (Uploads)
 
 **Imagen:** `httpd:alpine` (Apache ligero) o `nginx:alpine`
 **Nombre del contenedor:** `S4-backend-upload`
@@ -94,14 +94,14 @@ RUN chown -R www-data:www-data /var/www/html/
 
 ---
 
-### 🔄 S5: Backend Replica (Alta Disponibilidad)
+### S5: Backend Replica (Alta Disponibilidad)
 
 **Imagen:** Misma construcción que **S2**.
 **Función:** Es un clon exacto de S2. Si S2 se cae o está saturado, S1 envía el tráfico a S5. Garantiza que la aplicación siga funcionando. Comparte el mismo código y el mismo volumen de uploads.
 
 ---
 
-### 🛡️ S6: Servicio de Backup
+### S6: Servicio de Backup
 
 **Imagen:** `alpine:latest`
 **Función:** Contenedor de utilidad que ejecuta tareas programadas (cron) para realizar copias de seguridad de la base de datos S7.
@@ -111,7 +111,7 @@ Instala el cliente mysql y ejecuta `mysqldump` periódicamente, guardando los `.
 
 ---
 
-### 💾 S7: Base de Datos Maestra
+### S7: Base de Datos Maestra
 
 **Imagen:** `mysql:8.0`
 **Función:** Almacena toda la información persistente.
