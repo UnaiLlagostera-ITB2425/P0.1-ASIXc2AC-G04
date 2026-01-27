@@ -16,14 +16,18 @@ permitiendo resolución de nombres por hostname (S1, S2, etc.).
 ### Contenedores Principales:
 
 **Capa de Presentación y Balanceo:**
-- **S1 (apache:alpine)**: Load balancer y proxy inverso. Expone puerto 80 al host. Configurado con `upstream` para S2/S3 y `proxy_pass` selectivo solo para `/extagram.php`.
+- **S1 (Apache httpd:alpine)**: Proxy inverso con mod_proxy_balancer; recibe peticiones del navegador y balancea a S2/S3 para extagram.php.
 
-**Capa de Aplicación (Backends):**
+**Aplicación Dinámica (PHP-FPM):**
 - **S2 y S3 (php-fpm/app)**: Backends replicados. Procesan lógica PHP de `extagram.php` (validación/subida de imágenes, integración Telegram).
+
+**Procesador de Uploads (PHP-FPM):** 
 - **S4 (PHP/app dinámica)**: Servidor para procesamiento PHP adicional o endpoints específicos.
 
-**Capa de Contenido Estático:**
+**Servidor de Imágenes (Apache httpd:alpine)**
 - **S5 (Static Server)**: Servidor de archivos estáticos (CSS/JS/imágenes públicas).
+
+**Assets Estáticos (Apache httpd:alpine)**
 - **S6 (Static Server)**: Réplica o servidor estático complementario para CDN-like.
 
 ### Almacenamiento Persistente:
