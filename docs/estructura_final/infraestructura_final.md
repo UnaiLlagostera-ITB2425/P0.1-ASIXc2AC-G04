@@ -58,7 +58,7 @@ permitiendo resolución de nombres por hostname (S1, S2, etc.).
 
 ## 3. Esquema de Red y Flujo de Peticiones
 
-![Captura: Esquema de la infraestructura final](../../media/img/infra_final.drawio.png)
+![Captura: Esquema de la infraestructura final](../../media/img/Infra_final.drawio.png)
 
 **Flujo detallado:**
 - **Entrada**: Browser → **S1**:443 (todas las peticiones HTTPS)
