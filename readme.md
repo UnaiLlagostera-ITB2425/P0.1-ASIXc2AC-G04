@@ -379,7 +379,7 @@ Se definen las tareas de seguridad en el tablero Proofhub.
 | **4.2** | **Implementación Firewall** | Configuración de Iptables/UFW o contenedor Firewall ante S1. | *[Unai]* | *To Do* |
 | **4.3** | **Despliegue WAF (S1)** | Instalación y configuración de ModSecurity en el Apache Gateway. | *[Asier]* | *To Do* |
 | **4.4** | **Hardening BBDD (S7)** | Auditoría de seguridad MySQL, cifrado en reposo y gestión de usuarios. | *[Asier]* | *To Do* |
-| **4.5** | **Hardening OS & Web** | Deshabilitar versiones PHP inseguras, ocultar cabeceras y asegurar SSH. | *[Unai / Samuel]* | *To Do* |
+| **4.5** | **Hardening OS & Web** | Deshabilitar versiones PHP inseguras, ocultar cabeceras y asegurar SSH. | *[Asier]* | *To Do* |
 | **4.6** | **Integración VPN (S5)** | Configuración de túnel VPN (Wireguard/OpenVPN) para conectar el nodo externo S5. | *[Samuel]* | *To Do* |
 | **4.7** | **Pruebas de Penetración** | Validación de ataques SQLi y XSS contra el WAF. | *[Todos]* | *To Do* |
 
