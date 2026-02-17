@@ -1,329 +1,174 @@
-# Arquitectura de Microservicios Distribuidos "Extagram"
+# Arquitectura del Sistema Extagram
 
-## 1. Introducción y Objetivos
+El sistema **Extagram** implementa una arquitectura de microservicios contenerizada basada en el patrón **Gateway Offloading**. La infraestructura desacopla la capa de presentación, la lógica de negocio, el procesamiento de carga de archivos (I/O intensivo) y la persistencia de datos.
 
-El objetivo de este sprint ha sido descomponer la aplicación monolítica original en una arquitectura de **microservicios contenerizados**. Esta transformación busca mejorar la escalabilidad, la mantenibilidad y la tolerancia a fallos del sistema.
+Todos los servicios operan dentro de una red aislada (`app-network`), exponiendo únicamente el Gateway (**S1**) hacia la red pública/host.
 
-Se ha diseñado una infraestructura basada en **7 contenedores independientes (S1-S7)**, orquestados mediante Docker, donde cada servicio tiene una responsabilidad única (Principio de Responsabilidad Única).
+## 1. Topología de Red y Flujo de Datos
 
-### ¿Por qué Docker?
-
-Docker nos permite **containerizar cada servicio de forma independiente**, garantizando que:
-- Cada componente (Apache, PHP-FPM, MySQL) está **aislado** en su propio contenedor
-- Se **escala fácilmente** (puedes añadir más instancias de S2/S3 sin complicaciones)
-- La **reproducibilidad** es garantizada (mismo código = mismo comportamiento en cualquier máquina)
-- La **configuración es versionable** (todo en archivos YAML)
-- Se **simplifica el despliegue** en AWS (orquestación clara y predecible)
-- Se **reducen dependencias** del sistema host (no necesitas instalar PHP, Apache, MySQL directamente)
-
-En resumen: **una aplicación modular, portable y fácil de mantener**.
+El siguiente diagrama representa el flujo de tráfico HTTP/HTTPS y las dependencias de conexión a base de datos.
 
 
-## 2. Infraestructura Base y Redes
+### 1.2 Inventario de Componentes
 
-Para garantizar la comunicación entre servicios aislados y la persistencia de datos crítica, se establecieron los siguientes elementos de infraestructura compartida antes del despliegue:
-
-* **Red Virtual (`app-network`):** Una red tipo *bridge* que permite la resolución de nombres DNS entre contenedores (ej. `S1` puede llamar a `S2` por su nombre).
-* **Volumen de Datos (`mysql_data`):** Garantiza que la base de datos no pierda información si el contenedor S7 se reinicia.
-* **Volumen de Archivos (`shared-uploads`):** Un volumen crítico compartido entre los backends (S2, S3, S4) y el servidor de imágenes (S5) para permitir la consistencia de archivos.
+| ID | Servicio | Imagen Base | Rol Funcional | Dependencias |
+| --- | --- | --- | --- | --- |
+| **S1** | `s1-proxy` | `httpd:2.4` | Reverse Proxy, SSL Termination, L7 Load Balancer. | N/A |
+| **S2** | `s2-app` | `php:8.0-apache` | Lógica de negocio (Lectura/Renderizado). | S7 |
+| **S3** | `s3-app` | `php:8.0-apache` | Réplica de lógica de negocio (Alta Disponibilidad). | S7 |
+| **S4** | `s4-upload` | `php:8.0-apache` | Procesamiento exclusivo de uploads (Escritura). | S7, Vol. Uploads |
+| **S5** | `s5-images` | `httpd:2.4` | Servidor estático de alto rendimiento para imágenes de usuario. | Vol. Uploads |
+| **S6** | `s6-static` | `httpd:2.4` | Servidor de activos del frontend (CSS, JS, Logos). | N/A |
+| **S7** | `s7-db` | `mysql:8.0` | Motor de base de datos relacional. | Vol. DB |
 
 ---
 
-## 3. Capa de Persistencia de Datos (S7)
+## 2. Configuración de Red y Enrutamiento (Gateway S1)
 
-El corazón del sistema es el servicio de base de datos. Se ha configurado para ser resiliente y autoinicializable.
+El servicio **S1** actúa como único punto de entrada. Su configuración se basa en `httpd.conf` con módulos `proxy_http`, `proxy_balancer`, `lbmethod_byrequests` y `ssl` habilitados.
 
-### Servicio S7: Base de Datos Maestra
+### 2.1 SSL Offloading
 
-* **Motor:** MySQL 8.0
-* **Estrategia de Inicio:** Se utiliza un script SQL montado en `/docker-entrypoint-initdb.d/` para crear automáticamente el esquema y los usuarios al primer arranque.
+El tráfico se recibe en el puerto **443**. La terminación SSL ocurre en S1, desencriptando el tráfico antes de enviarlo a los microservicios internos mediante HTTP estándar.
 
-**Archivo: `S7/docker-compose.yml`**
+* **Certificados:** Ubicados en `./certs/server.crt` y `./certs/server.key`.
+* **Redirección:** `VirtualHost *:80` fuerza una redirección **301** hacia HTTPS.
 
-```yaml
-services:
-  mysql-db:
-    image: mysql:8.0
-    container_name: S7-mysql-db
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: extagram_db
-      MYSQL_USER: extagram_admin
-      MYSQL_PASSWORD: P0.1_G04
-      MYSQL_INITDB_SKIP_TZINFO: "yes" # Optimización tiempo de arranque
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - app-network
-    healthcheck: # Garantiza que la DB está lista antes que la App
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-    restart: unless-stopped
+### 2.2 Reglas de Proxy (`extagram.conf`)
 
-networks:
-  app-network:
-    external: true
-volumes:
-  mysql_data:
-    external: true
+La lógica de enrutamiento se define explícitamente para optimizar el rendimiento y aislar cargas de trabajo:
 
-```
+1. **Balanceo de Carga (Lectura):**
+* **Ruta:** `/` (Raíz y tráfico general).
+* **Destino:** `balancer://mycluster` (compuesto por `http://s2-app` y `http://s3-app`).
+* **Algoritmo:** `byrequests` (Round Robin).
 
-**Script de Inicialización: `S7/init.sql`**
 
-```sql
-CREATE DATABASE IF NOT EXISTS extagram_db;
-USE extagram_db;
+2. **Aislamiento de Escritura (Uploads):**
+* **Ruta:** `/upload.php`
+* **Destino:** `http://s4-upload`
+* > **Justificación Técnica:** La subida de archivos consume hilos de Apache y memoria I/O. Al enrutar esto a S4, se evita que los uploads bloqueen la navegación de usuarios en S2/S3.
 
-CREATE TABLE IF NOT EXISTS posts (
-    post TEXT,
-    photourl TEXT
-);
 
-CREATE USER IF NOT EXISTS 'extagram_admin'@'%' IDENTIFIED BY 'P0.1_G04';
-GRANT ALL PRIVILEGES ON extagram_db.* TO 'extagram_admin'@'%';
-FLUSH PRIVILEGES;
 
-```
+
+3. **Entrega de Contenido Estático (CDN Interno):**
+* **Ruta:** `/uploads/`  `http://s5-images`
+* **Ruta:** `/style.css` (o `/assets/`)  `http://s6-static`
+* > **Justificación Técnica:** Servir estáticos desde contenedores httpd puros elimina el overhead del intérprete PHP presente en S2/S3.
+
+
+
+
 
 ---
 
-## 4. Capa de Lógica de Negocio (Backend Cluster)
+## 3. Definición de Servicios y Build
 
-La aplicación PHP se ha dividido en tres contenedores para separar la carga de lectura/visualización de la carga de escritura/subida.
+### 3.1 Cluster de Aplicación (S2, S3, S4)
 
-### Imagen Base Personalizada (S2, S3, S4)
+Estos servicios comparten una definición de `Dockerfile` para garantizar paridad de entorno.
 
-Todos los servicios de backend comparten la misma definición de construcción para asegurar paridad de entorno.
+* **Base:** `php:8.0-apache`.
+* **Extensiones:** Instalación de `mysqli` mediante `docker-php-ext-install` para conectividad con MySQL 8.0.
+* **Permisos:** `chown -R www-data:www-data /var/www/html`. El servidor web se ejecuta bajo el usuario `www-data` por razones de seguridad (principio de menor privilegio).
+* **Montaje:** El código fuente en `./src` se monta en `/var/www/html` en tiempo de ejecución.
 
-**Archivo: `S2/Dockerfile`**
+### 3.2 Base de Datos (S7)
 
-```dockerfile
-FROM php:8.0-apache
-# Instalación de drivers para conexión con S7
-RUN docker-php-ext-install mysqli && docker-php-ext-enable mysqli
-# Asignación de permisos para escritura de uploads
-RUN chown -R www-data:www-data /var/www/html
+Instancia estándar de MySQL 8.0.
 
-```
+* **Inicialización:** Utiliza el script `/docker-entrypoint-initdb.d/init.sql` en el primer arranque para crear la base de datos `extagram_db`, la tabla `posts` y los usuarios necesarios.
+* **Credenciales:** Inyectadas vía variables de entorno (`MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`).
 
-### Servicios S2 y S3: Clúster Web (Balanceado)
+### 3.3 Servidores Estáticos (S5, S6)
 
-Estos nodos manejan el tráfico de usuarios general. S1 balancea la carga entre ellos. Si uno falla, el otro asume el trabajo.
-
-**Archivo: `S2/docker-compose.yml` (Idéntico estructura para S3)**
-
-```yaml
-services:
-  app-s2:
-    build: .
-    container_name: S2-backend-1
-    volumes:
-      - ../src:/var/www/html        # Código fuente en vivo
-      - shared-uploads:/var/www/html/uploads # Acceso a fotos subidas
-    networks:
-      - app-network
-    restart: unless-stopped
-
-networks:
-  app-network:
-    external: trueño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.
-volumes:
-  shared-uploads:
-    external: true
-
-```
-
-### Servicio S4: Backend de Carga Dedicado
-
-Se ha aislado la lógica de `upload.php` en un contenedor separado. Esto evita que el procesamiento de imágenes pesadas ralentice la navegación general de la web.
-
-**Archivo: `S4/docker-compose.yml`**
-
-```yaml
-services:
-  app-s4:
-    build: .
-    container_name: S4-backend-upload
-    volumes:
-      - ../src:/var/www/htmlño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.
-      - shared-uploads:/var/www/html/uploads
-    networks:
-      - app-network
-    restart: unless-stopped
-    # ... (redes y volúmenes igual que S2)
-
-```
+Utilizan la imagen `httpd:2.4` sin modificaciones de build (Vanilla). La configuración depende exclusivamente del montaje de volúmenes en `/usr/local/apache2/htdocs/`.
 
 ---
 
-## 5. Capa de Contenido Estático (CDN Interno)
+## 4. Estrategia de Persistencia y Volúmenes
 
-Para liberar a los backends PHP de servir archivos estáticos, se han desplegado servidores Apache ligeros.
+La infraestructura utiliza volúmenes Docker gestionados para garantizar la persistencia de datos críticos más allá del ciclo de vida de los contenedores.
 
-### Servicio S5: Servidor de Imágenes
+### 4.1 Volúmenes Definidos
 
-Sirve exclusivamente el contenido de la carpeta `/uploads`.
+1. **`mysql_data` (Crítico):**
+* **Montaje:** `/var/lib/mysql` en **S7**.
+* **Propósito:** Almacena los ficheros BLOB, esquemas y tablas de MySQL. Sin este volumen, la base de datos se reinicia a cero tras cada despliegue.
 
-**Archivo: `S5/docker-compose.yml`**
 
-```yaml
-services:
-  apache-images:
-    image: httpd:2.4
-    container_name: S5-apache-images
-    volumes:
-      # Monta solo el volumen de uploads, no el código PHP
-      - shared-uploads:/usr/local/apache2/htdocs/uploads
-    networks:
-      - app-network
-    restart: unless-stopped
+2. **`shared-uploads` (Compartido):**
+* **Montaje:**
+* **S4 (Escritura):** `/var/www/html/uploads`
+* **S5 (Lectura):** `/usr/local/apache2/htdocs/uploads`
 
-networks:
-  app-network:
-    external: true
-volumes:
-  shared-uploads:
-    external: true
+* **Propósito:** Permite que el nodo S4 escriba un archivo físico y que el nodo S5 lo sirva inmediatamente. Resuelve el problema de almacenamiento efímero en contenedores distribuidos.
 
-```
 
-### Servicio S6: Servidor de Assets
-
-Sirve hojas de estilo y gráficos de la interfaz.
-
-**Archivo: `S6/docker-compose.yml`**
-
-```yaml
-services:
-  apache-assets:
-    image: httpd:2.4
-    container_name: S6-apache-assets
-    volumes:
-      - ./assets:/usr/local/apache2/htdocs # Mapeo local de assets
-    networks:
-      - app-network
-    restart: unless-stopped
-
-networks:
-  app-network:
-    external: true
-
-```
 
 ---
 
-## 6. Capa de Acceso y Enrutamiento (Gateway)
+## 5. Procedimientos de Infraestructura (Lifecycle)
 
-El componente más complejo es **S1**, que actúa como Proxy Inverso y Balanceador de Carga. Es el único punto de contacto con el exterior (Puerto 80).
+### 5.1 Prerrequisitos del Host
 
-### Construcción del Gateway (S1)
+* Motor **Docker Engine 20.10+** y **Docker Compose V2**.
+* Estructura de directorios:
 
-Se ha personalizado la imagen de Apache para habilitar módulos de proxy y balanceo que vienen desactivados por defecto.
-
-**Archivo: `S1/Dockerfile`**
-
-```dockerfile
-FROM httpd:2.4
-COPY ./conf/extagram.conf /usr/local/apache2/conf/extra/extagram.conf
-
-# Script de activación de módulos (Proxy, Balancer, Slotmem)
-RUN sed -i \
-    -e 's/#LoadModule proxy_module/LoadModule proxy_module/' \
-    -e 's/#LoadModule proxy_http_module/LoadModule proxy_http_module/' \
-    -e 's/#LoadModule proxy_balancer_module/LoadModule proxy_balancer_module/' \
-    -e 's/#LoadModule lbmethod_byrequests_module/LoadModule lbmethod_byrequests_module/' \
-    -e 's/#LoadModule slotmem_shm_module/LoadModule slotmem_shm_module/' \
-    /usr/local/apache2/conf/httpd.conf && \
-    echo "Include conf/extra/extagram.conf" >> /usr/local/apache2/conf/httpd.conf
+```text
+.
+├── docker-compose.yml
+├── conf/
+│   └── extagram.conf
+├── certs/
+│   ├── server.crt
+│   └── server.key
+├── src/            # código PHP
+├── assets/         # estáticos
+└── sql/
+    └── init.sql
 
 ```
 
-### Configuración de Rutas y Balanceo
+### 5.2 Instalación (Despliegue en frío)
 
-El archivo de configuración define cómo se distribuye el tráfico basándose en la URL solicitada.
+Dado que la red y los volúmenes están definidos como `external: true` (o requieren persistencia explícita), deben inicializarse antes de levantar el stack.
 
-**Archivo: `S1/conf/extagram.conf`**
+**1. Creación de objetos de infraestructura:**
 
-```apache
-# Bloque 1: Redirección forzosa de HTTP a HTTPS
-<VirtualHost *:80>
-    ServerName localhost
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-</VirtualHost>
-
-# Bloque 2: Configuración HTTPS Segura
-<VirtualHost *:443>
-    ServerName localhost
-
-    # Activar SSL
-    SSLEngine on
-    SSLCertificateFile "/usr/local/apache2/conf/certs/server.crt"
-    SSLCertificateKeyFile "/usr/local/apache2/conf/certs/server.key"
-
-    ProxyPreserveHost On
-
-    # --- RUTAS DE PROXY (Las mismas que tenías antes) ---
-
-    # 1. Assets (CSS/SVG)
-    ProxyPass "/style.css" "http://S6-apache-assets/style.css"
-    ProxyPassReverse "/style.css" "http://S6-apache-assets/style.css"
-
-    # 2. Imágenes subidas
-    ProxyPass "/uploads/" "http://S5-apache-images/uploads/"
-    ProxyPassReverse "/uploads/" "http://S5-apache-images/uploads/"
-
-    # 3. Script de subida
-    ProxyPass "/upload.php" "http://S4-backend-upload/upload.php"
-    ProxyPassReverse "/upload.php" "http://S4-backend-upload/upload.php"
-
-    # 4. Balanceador de carga (Web principal)
-    <Proxy "balancer://mycluster">
-        BalancerMember "http://S2-backend-1:80"
-        BalancerMember "http://S3-backend-2:80"
-    </Proxy>
-    ProxyPass "/" "balancer://mycluster/"
-    ProxyPassReverse "/" "balancer://mycluster/"
-</VirtualHost>
-
+```bash
+docker network create app-network
+docker volume create mysql_data
+docker volume create shared-uploads
 
 ```
 
-**Archivo: `S1/docker-compose.yml`**
+**2. Despliegue de servicios:**
 
-```yaml
-services:
-  gateway:
-    build: .
-    container_name: S1-gateway
-    ports:
-      - "80:80"   # HTTP (lo usaremos para redirigir)
-      - "443:443" # HTTPS (Nuevo puerto seguro)
-    volumes:
-      # Montamos la carpeta de certificados dentro del contenedor
-      - ./certs:/usr/local/apache2/conf/certs:ro
-    networks:
-      - app-network
-    restart: unless-stopped
-
-networks:
-  app-network:
-    external: true
+```bash
+docker-compose up -d --build
 
 ```
 
----
+### 5.3 Verificación de Salud
 
-## 7. Conclusión del Despliegue
+* **Estado de contenedores:** `docker-compose ps` (Todos deben estar en estado `Up`).
+* **Conectividad DB:**
+```bash
+docker exec -it s7-db bash
+# mysql -p
+(password)
 
-La arquitectura implementada cumple con los requisitos de **desacoplamiento**.
+```
 
-1. **S7** mantiene los datos seguros independientemente de la aplicación.
-2. **S5** y **S6** descargan el tráfico estático, permitiendo que PHP respire.
-3. **S1** protege la red interna y permite escalar horizontalmente añadiendo más nodos al clúster (S2/S3).
 
-Este diseño permite realizar mantenimientos (como reiniciar S2) sin que el usuario final perciba una caída del servicio, ya que S1 redirigirá automáticamente a S3.
+
+### 5.4 Escalado Horizontal
+
+Para aumentar la capacidad de procesamiento de peticiones de lectura, escalar las réplicas del servicio `s2-app` (nota: S1 balanceará automáticamente las nuevas instancias si usa descubrimiento DNS interno).
+
+```bash
+docker-compose up -d --scale s2-app=3
+
+```

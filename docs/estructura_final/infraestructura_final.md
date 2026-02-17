@@ -15,37 +15,61 @@ permitiendo resolución de nombres por hostname (S1, S2, etc.).
 
 ### Contenedores Principales:
 
-**Capa de Presentación y Balanceo:**
-- **S1 (Apache httpd:alpine)**: Proxy inverso con mod_proxy_balancer; recibe peticiones del navegador y balancea a S2/S3 para extagram.php.
+**Capa de Balanceo**
+- **S1 (Apache httpd:alpine)**:
+  - **Balanceo de carga**  
+    - Proxy inverso con `mod_proxy_balancer`; recibe peticiones del navegador y balancea a S2/S3 para `/extagram.php`.
+  - **Ruteo inteligente**
+    - `/upload.php` → S4
+    - `/storage/` → S5
+    - `/static/` → S6
 
-**Aplicación Dinámica (PHP-FPM):**
+**Aplicación Dinámica (PHP-FPM)**
 - **S2 y S3 (php-fpm/app)**: Backends replicados. Procesan lógica PHP de `extagram.php` (validación/subida de imágenes, integración Telegram).
+  - **Función** 
+    - Ejecuta extagram.php
+  - **Redundancia**
+    - Gracias que tenemos al S1 para balancear entre ambos S2 y S3 obtendremos una alta disponibilidad y la página seguira funcionando aunque caiga un docker
 
-**Procesador de Uploads (PHP-FPM):** 
-- **S4 (PHP/app dinámica)**: Servidor para procesamiento PHP adicional o endpoints específicos.
+**Procesador de Uploads (PHP-FPM)** 
+- **S4 (PHP/app dinámica)**:
+  - **Función**
+    - Ejecuta unicamente el `upload.php`
+    - Genera un ID único para la imagen
+    - Guarda la imagen en `/uploads/[ID]`
+    - Hace un insert en la BD
 
+    
 **Servidor de Imágenes (Apache httpd:alpine)**
-- **S5 (Static Server)**: Servidor de archivos estáticos (CSS/JS/imágenes públicas).
+- **S5 (Static Server)**:
+  - **Función**
+    - Mostrar las imagenes guardadas en la ruta `/uploads/` via `/storage/[ID]`
 
 **Assets Estáticos (Apache httpd:alpine)**
-- **S6 (Static Server)**: Réplica o servidor estático complementario para CDN-like.
+- **S6 (Static Server)**:
+  - **Función**
+    - Sirve los archivos de de estilos e imagenes de la página web
 
 ### Almacenamiento Persistente:
-- **S7 (Database)**: Base de datos relacional (MySQL). Almacena tabla `posts`, usuarios e metadatos de imágenes.
-- **Uploads Folder**: Volumen Docker montado (`/uploads/`) para persistir imágenes subidas por usuarios.
+- **S7 (Database)**: Base de datos relacional (MySQL). Almacena tabla `posts` y metadatos de imágenes.
+  - **Función**
+    - Almacena los posts y replica las imágenes subidas como BLOBs binarios
+    - Garantiza disponibilidad si falla el sistema de archivos `/uploads/`
 
 ## 3. Esquema de Red y Flujo de Peticiones
 
-![Captura: Esquema de la infraestructura final](../../media/img/infraestructura_avanzada.png)
+![Captura: Esquema de la infraestructura final](../../media/img/Infra_final.drawio.png)
 
 **Flujo detallado:**
-- **Entrada**: Browser → **S1**:80 (todas las peticiones HTTP)
+- **Entrada**: Browser → **S1**:443 (todas las peticiones HTTPS)
 - **Balanceo Dinámico**:
   - `/extagram.php` → **Round-robin S2/S3** (alta disponibilidad)
-  - Rutas PHP dinámicas → **S4**
-  - Archivos `.css`/`.js`/`.png` → **S5/S6**
-- **Persistencia**: S2/S3/S4 → **S7** (DB) + **Uploads folder** para imágenes
-- **Red Interna**: Comunicación via Docker network (puertos internos 80/3306)
+  - `/upload.php` → **S4** (Procesaimiento unico de `/uploads/`)
+  - `/storage/*` → **S5** (Imagenes dinámicas desde `/uploads/`)
+  - `/static/`→ **S6** (CSS, SVG)
+- **Persistencia Híbrida**: S2/S3/S4 → **S7** (MySQL)
+- **S4** → `/uploads/` y replica automaticamente al S7
+- **Red Interna**: Comunicación via Docker network (puertos internos 443/3306)
 
 ## 4. Ventajas Arquitectónicas
 
