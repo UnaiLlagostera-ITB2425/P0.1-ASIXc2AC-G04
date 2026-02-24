@@ -1,4 +1,4 @@
-# 📘 Documentación Técnica: Migración a Microservicios "Extagram"
+# Documentación Técnica: Migración a Microservicios "Extagram"
 
 ## 1. Introducción y Justificación Estratégica
 
@@ -42,7 +42,6 @@ graph TD
         S2 -.->|Lectura Montada| VOL
         S3 -.->|Lectura Montada| VOL
     end
-
 ```
 
 ---
@@ -52,8 +51,8 @@ graph TD
 Para replicar este despliegue se requiere:
 
 * **SO Host:** Linux (Ubuntu 24.04 LTS recomendado).
-* **Docker Engine:** v24.0+
-* **Docker Compose:** v2.0+
+* **Docker Engine:** v29.2.1
+* **Docker Compose:** v1.29.2
 * **Puertos Host:** 80 (HTTP) y 443 (HTTPS) libres.
 * **Recursos:** Mínimo 2 vCPU y 4GB RAM. (De los cuales 2 con una partición swap)
 
@@ -63,7 +62,7 @@ Para replicar este despliegue se requiere:
 
 A continuación, se detalla la configuración técnica de cada microservicio, explicando su función específica y su implementación.
 
-### 🚪 S1: Gateway (Punto de Entrada)
+### S1: Gateway (Punto de Entrada)
 
 **Función:** Actúa como la única puerta de enlace. Realiza terminación SSL (descarga el cifrado) y distribuye el tráfico.
 
@@ -74,7 +73,7 @@ A continuación, se detalla la configuración técnica de cada microservicio, ex
 
 
 
-**📄 Dockerfile:**
+**Dockerfile:**
 Se personaliza la imagen de Apache habilitando módulos de Proxy y SSL mediante manipulación del `httpd.conf` con `sed`.
 
 ```dockerfile
@@ -99,7 +98,7 @@ RUN sed -i \
 
 ```
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 
 ```yaml
 version: '3'
@@ -115,7 +114,7 @@ services:
 
 ```
 
-**📄 Configuración Apache (extagram.conf):**
+**Configuración Apache (extagram.conf):**
 
 ```apache
 Listen 443
@@ -151,11 +150,11 @@ Listen 443
 
 ---
 
-### ⚙️ S2: Backend de Aplicación (Nodo 1)
+### S2: Backend de Aplicación (Nodo 1)
 
 **Función:** Procesamiento de lógica PHP. Es un contenedor "stateless" (sin estado), excepto por la conexión a volúmenes compartidos.
 
-**📄 Dockerfile:**
+**Dockerfile:**
 
 ```dockerfile
 FROM php:8.0-apache
@@ -164,7 +163,7 @@ RUN chown -R www-data:www-data /var/www/html
 
 ```
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 **Nota Crítica:** Observar cómo monta el volumen de uploads apuntando a la carpeta de S4 (`../S4/src/uploads`). Esto permite que S2 vea las fotos que subió S4.
 
 ```yaml
@@ -183,11 +182,11 @@ services:
 
 ---
 
-### ⚙️ S3: Backend de Aplicación (Nodo 2)
+### S3: Backend de Aplicación (Nodo 2)
 
 **Función:** Redundancia. Si S2 cae o está saturado, S3 atiende las peticiones gracias al balanceador de S1. Su configuración es idéntica a S2.
 
-**📄 Dockerfile:**
+**Dockerfile:**
 
 ```dockerfile
 FROM php:8.0-apache
@@ -196,7 +195,7 @@ RUN chown -R www-data:www-data /var/www/html
 
 ```
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 
 ```yaml
 version: '3'
@@ -214,11 +213,11 @@ services:
 
 ---
 
-### 📥 S4: Upload Service (Servicio de Ingesta)
+### S4: Upload Service (Servicio de Ingesta)
 
 **Función:** Servicio especializado en E/S (Entrada/Salida) de archivos pesados. Se separa para no bloquear los procesos PHP de S2/S3 durante subidas lentas.
 
-**📄 Dockerfile:**
+**Dockerfile:**
 Incluye configuración específica de `php.ini` para permitir archivos grandes (64MB).
 
 ```dockerfile
@@ -231,7 +230,7 @@ RUN echo "upload_max_filesize = 64M" > /usr/local/etc/php/conf.d/uploads.ini && 
 
 ```
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 Este contenedor es el "dueño" físico de la carpeta de uploads en el host.
 
 ```yaml
@@ -250,11 +249,11 @@ services:
 
 ---
 
-### 💾 S5: Backup Service (Disaster Recovery)
+### S5: Backup Service (Disaster Recovery)
 
 **Función:** Contenedor efímero (Worker). Su ciclo de vida es: *Nacer -> Ejecutar Dump -> Guardar Archivo -> Morir*. No consume recursos mientras no se usa.
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 Usa la imagen de MySQL como cliente para conectar remotamente a S7.
 
 ```yaml
@@ -274,11 +273,11 @@ services:
 
 ---
 
-### 📦 S6: CDN (Content Delivery Network)
+### S6: CDN (Content Delivery Network)
 
 **Función:** Servidor HTTP optimizado (Alpine Linux) para servir exclusivamente contenido estático (CSS, JS, Logos), reduciendo la latencia y la carga en los servidores PHP.
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 
 ```yaml
 version: '3'
@@ -296,11 +295,11 @@ services:
 
 ---
 
-### 🗄️ S7: Base de Datos Relacional
+### S7: Base de Datos Relacional
 
 **Función:** Persistencia centralizada de la información estructurada.
 
-**📄 Archivo de Inicialización (`init.sql`):**
+**Archivo de Inicialización (`init.sql`):**
 Se ejecuta automáticamente solo la primera vez que se crea el volumen.
 
 ```sql
@@ -318,7 +317,7 @@ FLUSH PRIVILEGES;
 
 ```
 
-**📄 docker-compose.yml:**
+**docker-compose.yml:**
 Define el usuario root, base de datos por defecto, y lo más importante: un **Healthcheck**. Esto permite que los otros servicios sepan cuándo MySQL está realmente listo para recibir conexiones.
 
 ```yaml
