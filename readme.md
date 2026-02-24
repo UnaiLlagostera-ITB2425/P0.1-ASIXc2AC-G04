@@ -13,6 +13,34 @@ El proyecto ha evolucionado en dos fases:
 1. **Fase 1 (P0.1):** Diseño e implementación de una arquitectura de Alta Disponibilidad escalable con Docker (Microservicios).
 2. **Fase 2 (P0.2):** Evolución hacia una infraestructura securizada (WAF, Firewall) y monitorizada (Logs centralizados).
 
+## Indice
+
+- **configuration**
+  - [apache2.md](docs/configuration/apache2.md)
+  - [mysql.md](docs/configuration/mysql.md)
+- **despliegue**
+  - [github_workflow.md](docs/despliegue/github_workflow.md)
+  - [mysql_des.md](docs/despliegue/mysql_des.md)
+  - [web_server.md](docs/despliegue/web_server.md)
+- **estructura_final**
+  - [creacion_contenedores_prueba.md](docs/estructura_final/creacion_contenedores_prueba.md)
+  - [creacion_contenedores_prueba2.md](docs/estructura_final/creacion_contenedores_prueba2.md)
+  - [docker.md](docs/estructura_final/docker.md)
+  - [final.md](docs/estructura_final/final.md)
+  - [infraestructura_final.md](docs/estructura_final/infraestructura_final.md)
+  - [verificacion.md](docs/estructura_final/verificacion.md)
+- **información_previa**
+  - [creacion_github.md](docs/información_previa/creacion_github.md)
+  - [estudio_tecnologias.md](docs/información_previa/estudio_tecnologias.md)
+  - [infraestructura_inicial.md](docs/información_previa/infraestructura_inicial.md)
+- **manuales**
+  - [manual_administrador.md](docs/manuales/manual_administrador.md)
+  - [manual_usuario.md](docs/manuales/manual_usuario.md)
+- **securizacion**
+  - [firewall_host.md](docs/securizacion/firewall_host.md)
+  - [hardening_bd.md](docs/securizacion/hardening_bd.md)
+  - [Contratiempos.md](docs/securizacion/Contratiempos.md)
+
 ---
 
 ## Gestión del Proyecto (Agile & ProofHub)
