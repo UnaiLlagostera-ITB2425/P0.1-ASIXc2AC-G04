@@ -14,8 +14,8 @@ El siguiente diagrama representa el flujo de tráfico HTTP/HTTPS y las dependenc
 | ID | Servicio | Imagen Base | Rol Funcional | Dependencias |
 | --- | --- | --- | --- | --- |
 | **S1** | `s1-proxy` | `httpd:2.4` | Reverse Proxy, SSL Termination, L7 Load Balancer. | N/A |
-| **S2** | `s2-app` | `php:8.0-apache` | Lógica de negocio (Lectura/Renderizado). | S7 |
-| **S3** | `s3-app` | `php:8.0-apache` | Réplica de lógica de negocio (Alta Disponibilidad). | S7 |
+| **S2** | `s2-app` | `php:8.4-apache` | Lógica de negocio (Lectura/Renderizado). | S7 |
+| **S3** | `s3-app` | `php:8.4-apache` | Réplica de lógica de negocio (Alta Disponibilidad). | S7 |
 | **S4** | `s4-upload` | `php:8.0-apache` | Procesamiento exclusivo de uploads (Escritura). | S7, Vol. Uploads |
 | **S5** | `s5-images` | `httpd:2.4` | Servidor estático de alto rendimiento para imágenes de usuario. | Vol. Uploads |
 | **S6** | `s6-static` | `httpd:2.4` | Servidor de activos del frontend (CSS, JS, Logos). | N/A |
@@ -69,7 +69,7 @@ La lógica de enrutamiento se define explícitamente para optimizar el rendimien
 
 Estos servicios comparten una definición de `Dockerfile` para garantizar paridad de entorno.
 
-* **Base:** `php:8.0-apache`.
+* **Base:** `php:8.4-apache`.
 * **Extensiones:** Instalación de `mysqli` mediante `docker-php-ext-install` para conectividad con MySQL 8.0.
 * **Permisos:** `chown -R www-data:www-data /var/www/html`. El servidor web se ejecuta bajo el usuario `www-data` por razones de seguridad (principio de menor privilegio).
 * **Montaje:** El código fuente en `./src` se monta en `/var/www/html` en tiempo de ejecución.
@@ -141,14 +141,12 @@ Dado que la red y los volúmenes están definidos como `external: true` (o requi
 docker network create app-network
 docker volume create mysql_data
 docker volume create shared-uploads
-
 ```
 
 **2. Despliegue de servicios:**
 
 ```bash
 docker-compose up -d --build
-
 ```
 
 ### 5.3 Verificación de Salud
@@ -159,7 +157,6 @@ docker-compose up -d --build
 docker exec -it s7-db bash
 # mysql -p
 (password)
-
 ```
 
 
@@ -170,5 +167,4 @@ Para aumentar la capacidad de procesamiento de peticiones de lectura, escalar la
 
 ```bash
 docker-compose up -d --scale s2-app=3
-
 ```
