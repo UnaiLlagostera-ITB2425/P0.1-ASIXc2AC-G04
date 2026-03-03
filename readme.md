@@ -418,3 +418,99 @@ Se definen las tareas de seguridad en el tablero Proofhub.
 * **Inicio Sprint 4:** Inmediato (17/02).
 * **Foco Técnico:** Investigar configuración de ModSecurity sobre imagen Docker `httpd:2.4` y despliegue de VPN.
 * **Fecha de entrega Sprint 4:** 24 de Febrero.
+
+# Acta de Reunión #05: Sprint Review #04 & Sprint Planning #05
+
+**Proyecto:** Extagram
+**Fecha:** 24/02/2026
+**Hora de inicio:** 15:15
+**Hora de finalización:** 15:45
+**Lugar:** Aula 209
+**Asistentes:**
+
+* Unai Llagostera
+* Samuel Moscoso
+* Asier Barranco
+
+---
+
+## 1. Orden del Día
+
+1. **Sprint Review (S4):** Revisión de las medidas de seguridad implementadas (Hardening, WAF, Firewall) y auditoría de resultados.
+2. **Retrospectiva Técnica (S4):** Análisis de las dificultades con la redirección HTTPS y los permisos de solo lectura (`read_only`).
+3. **Sprint Planning (S5):** Definición de objetivos para la fase final de Monitorización y Automatización.
+4. **Backlog:** Asignación de tareas finales.
+
+---
+
+## 2. Desarrollo de la Reunión y Acuerdos
+
+### 2.1. Sprint Review: Cierre del Sprint 4 (Seguridad)
+
+El equipo confirma la finalización exitosa del sprint de seguridad. Se ha logrado blindar la infraestructura cumpliendo con los requisitos de la fase P0.2. Se han ejecutado pruebas de auditoría ("Red Team") verificando que el sistema repele ataques básicos (SQLi, XSS) y protege la integridad de los archivos.
+
+**Hitos alcanzados en este Sprint:**
+
+* **Búnker Docker:** Los contenedores operan en modo de "solo lectura" (`read_only: true`), impidiendo la persistencia de malware.
+* **WAF Operativo:** `ModSecurity` en el proxy S1 bloquea peticiones maliciosas (403 Forbidden).
+* **MySQL Seguro:** Se ha eliminado el acceso root desde la aplicación y deshabilitado la carga de archivos locales.
+* **HTTPS Forzado:** Redirección estricta de tráfico HTTP a HTTPS resuelta.
+
+**Tabla de Tareas Completadas (Sprint 4):**
+
+| ID | Tarea / Módulo | Descripción | Responsables | Estado |
+| --- | --- | --- | --- | --- |
+| **4.1** | **Contenedores Docker (Repair)** | Revisión y estabilización del ciclo de vida de los 7 contenedores. | *[Asier / Unai]* | *Done* |
+| **4.2** | **Hardening Web (WAF)** | Implementación de ModSecurity y Cabeceras (HSTS, X-Frame, X-XSS). | *[Asier]* | *Done* |
+| **4.3** | **Hardening SO** | Directivas de seguridad en `docker-compose` (`no-new-privileges`, `pids_limit`, `read_only`). | *[Asier]* | *Done* |
+| **4.4** | **Hardening BBDD** | Configuración segura (`local-infile=0`) y principio de mínimo privilegio en usuarios SQL. | *[Asier]* | *Done* |
+| **4.5** | **Firewall Perimetral (S1)** | Reglas de filtrado para exponer únicamente puertos 80/443 y proteger el backend. | *[Unai]* | *Done* |
+| **4.6** | **Reparar Redirección** | Solución al bucle de redirecciones HTTP a HTTPS en el Proxy Inverso. | *[Asier / Unai]* | *Done* |
+| **4.7** | **Documentación Sprint 4** | Actualización de repositorio y memoria técnica en Markdown. | *[Unai / Samuel]* | *Done* |
+
+### 2.2. Retrospectiva Técnica S4
+
+Durante el bastionado del sistema surgieron dos desafíos técnicos importantes:
+
+1. **Conflicto de `Read-Only`:** Al activar el sistema de archivos de solo lectura, servicios como Apache y MySQL fallaban al intentar escribir logs o PIDs.
+* *Solución:* Implementación de volúmenes `tmpfs` (RAM) para las rutas `/tmp`, `/var/run` y `/var/log` en cada servicio.
+
+
+2. **Rescate de Root en PHP:** Se detectó una vulnerabilidad en el código heredado que usaba credenciales de root si fallaba el usuario estándar.
+* *Solución:* Eliminación total del fallback a root en `db.php` para cumplir el principio de mínimo privilegio.
+
+
+
+### 2.3. Sprint Planning (Sprint 5 - Monitorización y Finalización)
+
+Se inicia la **Fase Final** del proyecto. El objetivo es dotar a la infraestructura de "ojos" para ver qué ocurre en tiempo real y automatizar procesos.
+
+**Objetivos del Sprint 5:**
+
+1. **Monitorización Centralizada:** Implementar una pila tecnológica (Stack) para recolectar logs de todos los contenedores en un único punto. Se optará por **Grafana + Loki** (o Stack ELK) por su eficiencia con Docker.
+2. **Visualización (Dashboards):** Crear paneles que muestren métricas clave (peticiones por segundo, errores 500/403, uso de CPU/RAM).
+3. **Pruebas de Estrés:** Someter al sistema a una carga elevada (ataque DoS controlado) para verificar la resistencia de la configuración `pids_limit` y el rendimiento del balanceador.
+4. **Automatización (Opcional):** Si el tiempo lo permite, scriptear el despliegue final o usar Ansible/Vagrant como indica el requisito opcional.
+
+---
+
+## 3. Asignación de Tareas (Backlog Sprint 5)
+
+Las tareas se han organizado para priorizar la funcionalidad de monitorización obligatoria.
+
+| ID | Tarea / Módulo | Descripción | Responsables | Estado |
+| --- | --- | --- | --- | --- |
+| **5.1** | **Despliegue Stack Monitorización** | Selección e instalación de contenedores para logs (Grafana + Loki/Promtail o Elastic/Kibana). | *[Asier]* | *To Do* |
+| **5.2** | **Centralización de Logs** | Configuración de los drivers de Docker para enviar logs de S1, S2, S3 y S7 al sistema central. | *[Asier]* | *To Do* |
+| **5.3** | **Dashboard de Rendimiento** | Creación de paneles visuales en Grafana/Kibana para monitorizar tráfico y errores en tiempo real. | *[Unai]* | *To Do* |
+| **5.4** | **Pruebas de Estrés** | Ejecución de pruebas de carga (`ab`, `Siege` o `JMeter`) y análisis de comportamiento del servidor. | *[Asier / Unai / Samuel]* | *To Do* |
+| **5.5** | **Automatización (CI/CD)** | *(Opcional)* Scripting para automatizar la puesta en producción o despliegue con Ansible. | *[Asier]* | *To Do* |
+| **5.6** | **Documentación Sprint 5** | Cierre del proyecto, memoria final y limpieza de repositorio. | *[Asier / Unai / Samuel]* | *To Do* |
+
+---
+
+## 4. Próximos Pasos
+
+* **Inicio Sprint 5:** Inmediato (25/02/2026).
+* **Foco Técnico:** Investigar la integración de **Loki/Promtail** en el `docker-compose.yml` existente sin romper los servicios actuales.
+* **Fecha de entrega Final:** 10 de Marzo.
