@@ -15,31 +15,43 @@ El proyecto ha evolucionado en dos fases:
 
 ## Indice
 
-- **configuration**
-  - [apache2.md](docs/configuration/apache2.md)
-  - [mysql.md](docs/configuration/mysql.md)
-- **despliegue**
-  - [github_workflow.md](docs/despliegue/github_workflow.md)
-  - [mysql_des.md](docs/despliegue/mysql_des.md)
-  - [web_server.md](docs/despliegue/web_server.md)
-- **estructura_final**
-  - [creacion_contenedores_prueba.md](docs/estructura_final/creacion_contenedores_prueba.md)
-  - [creacion_contenedores_prueba2.md](docs/estructura_final/creacion_contenedores_prueba2.md)
-  - [docker.md](docs/estructura_final/docker.md)
-  - [final.md](docs/estructura_final/final.md)
-  - [infraestructura_final.md](docs/estructura_final/infraestructura_final.md)
-  - [verificacion.md](docs/estructura_final/verificacion.md)
-- **información_previa**
-  - [creacion_github.md](docs/información_previa/creacion_github.md)
-  - [estudio_tecnologias.md](docs/información_previa/estudio_tecnologias.md)
-  - [infraestructura_inicial.md](docs/información_previa/infraestructura_inicial.md)
-- **manuales**
-  - [manual_administrador.md](docs/manuales/manual_administrador.md)
-  - [manual_usuario.md](docs/manuales/manual_usuario.md)
-- **securizacion**
-  - [firewall_host.md](docs/securizacion/firewall_host.md)
-  - [hardening_bd.md](docs/securizacion/hardening_bd.md)
-  - [Contratiempos.md](docs/securizacion/Contratiempos.md)
+* **configuration**
+* [apache2.md](https://www.google.com/search?q=docs/configuration/apache2.md)
+* [mysql.md](https://www.google.com/search?q=docs/configuration/mysql.md)
+
+
+* **despliegue**
+* [github_workflow.md](https://www.google.com/search?q=docs/despliegue/github_workflow.md)
+* [mysql_des.md](https://www.google.com/search?q=docs/despliegue/mysql_des.md)
+* [web_server.md](https://www.google.com/search?q=docs/despliegue/web_server.md)
+
+
+* **estructura_final**
+* [creacion_contenedores_prueba.md](https://www.google.com/search?q=docs/estructura_final/creacion_contenedores_prueba.md)
+* [creacion_contenedores_prueba2.md](https://www.google.com/search?q=docs/estructura_final/creacion_contenedores_prueba2.md)
+* [docker.md](https://www.google.com/search?q=docs/estructura_final/docker.md)
+* [final.md](https://www.google.com/search?q=docs/estructura_final/final.md)
+* [infraestructura_final.md](https://www.google.com/search?q=docs/estructura_final/infraestructura_final.md)
+* [verificacion.md](https://www.google.com/search?q=docs/estructura_final/verificacion.md)
+
+
+* **información_previa**
+* [creacion_github.md](https://www.google.com/search?q=docs/informaci%C3%B3n_previa/creacion_github.md)
+* [estudio_tecnologias.md](https://www.google.com/search?q=docs/informaci%C3%B3n_previa/estudio_tecnologias.md)
+* [infraestructura_inicial.md](https://www.google.com/search?q=docs/informaci%C3%B3n_previa/infraestructura_inicial.md)
+
+
+* **manuales**
+* [manual_administrador.md](https://www.google.com/search?q=docs/manuales/manual_administrador.md)
+* [manual_usuario.md](https://www.google.com/search?q=docs/manuales/manual_usuario.md)
+
+
+* **securizacion**
+* [firewall_host.md](https://www.google.com/search?q=docs/securizacion/firewall_host.md)
+* [hardening_bd.md](https://www.google.com/search?q=docs/securizacion/hardening_bd.md)
+* [Contratiempos.md](https://www.google.com/search?q=docs/securizacion/Contratiempos.md)
+
+
 
 ---
 
@@ -72,8 +84,9 @@ Utilizamos la metodología **Agile** para la gestión de tareas, coordinando el 
 
 ---
 
-# Acta de Reunión #01: Kick-off y Sprint Planning**Proyecto:** Extagram
+# Acta de Reunión #01: Kick-off y Sprint Planning
 
+**Proyecto:** Extagram
 **Fecha:** 16/12/2025
 **Hora de inicio:** 16:00
 **Hora de finalización:** 17:30
@@ -97,7 +110,9 @@ Utilizamos la metodología **Agile** para la gestión de tareas, coordinando el 
 
 ## 2. Desarrollo de la Reunión y Acuerdos
 
-### 2.1. Análisis del ProyectoSe revisa la documentación del proyecto "Extagram". El equipo acuerda adoptar la metodología **Scrum**.
+### 2.1. Análisis del Proyecto
+
+Se revisa la documentación del proyecto "Extagram". El equipo acuerda adoptar la metodología **Scrum**.
 
 * **Objetivo Global:** Desplegar una aplicación PHP heredada evolucionando de un monolito a microservicios con Docker.
 * **Objetivo Sprint 1:** Despliegue funcional del monolito LAMP en nube pública.
@@ -127,12 +142,12 @@ Se han creado las siguientes tareas en el tablero del proyecto y se asignan resp
 
 | ID | Tarea | Responsable | Estado |
 | --- | --- | --- | --- |
-| **1.1** | Creación de Repositorio Git y estructura de directorios (`/docs`, `/src`). | *[Nombre]* | *Done* |
-| **1.2** | Redacción del Estudio Tecnológico y Justificación de AWS. | *[Nombre]* | *In Progress* |
-| **1.3** | **AWS:** Lanzamiento de instancia EC2 (VPC, Security Groups, KeyPairs). | *[Nombre]* | *In Progress* |
-| **1.4** | **SysAdmin:** Scripting de `User Data` para instalación desatendida de LAMP. | *[Nombre]* | *To Do* |
-| **1.5** | **BBDD:** Configuración de MySQL, creación de usuario y restauración del `.sql`. | *[Nombre]* | *To Do* |
-| **1.6** | **Deploy:** Subida de código PHP vía Git/SFTP y configuración de VirtualHost. | *[Nombre]* | *To Do* |
+| **1.1** | Creación de Repositorio Git y estructura de directorios (`/docs`, `/src`). | *[Unai]* | *Done* |
+| **1.2** | Redacción del Estudio Tecnológico y Justificación de AWS. | *[Asier]* | *In Progress* |
+| **1.3** | **AWS:** Lanzamiento de instancia EC2 (VPC, Security Groups, KeyPairs). | *[Asier]* | *In Progress* |
+| **1.4** | **SysAdmin:** Scripting de `User Data` para instalación desatendida de LAMP. | *[Samuel]* | *To Do* |
+| **1.5** | **BBDD:** Configuración de MySQL, creación de usuario y restauración del `.sql`. | *[Asier]* | *To Do* |
+| **1.6** | **Deploy:** Subida de código PHP vía Git/SFTP y configuración de VirtualHost. | *[Samuel]* | *To Do* |
 
 ---
 
@@ -449,6 +464,9 @@ Se definen las tareas de seguridad en el tablero Proofhub.
 
 El equipo confirma la finalización exitosa del sprint de seguridad. Se ha logrado blindar la infraestructura cumpliendo con los requisitos de la fase P0.2. Se han ejecutado pruebas de auditoría ("Red Team") verificando que el sistema repele ataques básicos (SQLi, XSS) y protege la integridad de los archivos.
 
+**Desviación del Alcance (VPN):**
+Durante la ejecución del Sprint, se detectó una incidencia crítica relacionada con la redirección HTTPS que provocaba bucles infinitos en el Proxy Inverso, dejando la aplicación inaccesible. Debido a la gravedad del error, el equipo decidió, mediante decisión unánime, despriorizar la tarea **4.6 Integración VPN** y moverla al Backlog general. En su lugar, se priorizó la tarea **4.6 Reparar Redirección** para garantizar la operatividad del sistema.
+
 **Hitos alcanzados en este Sprint:**
 
 * **Búnker Docker:** Los contenedores operan en modo de "solo lectura" (`read_only: true`), impidiendo la persistencia de malware.
@@ -465,7 +483,7 @@ El equipo confirma la finalización exitosa del sprint de seguridad. Se ha logra
 | **4.3** | **Hardening SO** | Directivas de seguridad en `docker-compose` (`no-new-privileges`, `pids_limit`, `read_only`). | *[Asier]* | *Done* |
 | **4.4** | **Hardening BBDD** | Configuración segura (`local-infile=0`) y principio de mínimo privilegio en usuarios SQL. | *[Asier]* | *Done* |
 | **4.5** | **Firewall Perimetral (S1)** | Reglas de filtrado para exponer únicamente puertos 80/443 y proteger el backend. | *[Unai]* | *Done* |
-| **4.6** | **Reparar Redirección** | Solución al bucle de redirecciones HTTP a HTTPS en el Proxy Inverso. | *[Asier / Unai]* | *Done* |
+| **4.6** | **Reparar Redirección** | Solución urgente al bucle de redirecciones HTTP a HTTPS (Sustituye a VPN). | *[Asier / Unai]* | *Done* |
 | **4.7** | **Documentación Sprint 4** | Actualización de repositorio y memoria técnica en Markdown. | *[Unai / Samuel]* | *Done* |
 
 ### 2.2. Retrospectiva Técnica S4
@@ -473,13 +491,12 @@ El equipo confirma la finalización exitosa del sprint de seguridad. Se ha logra
 Durante el bastionado del sistema surgieron dos desafíos técnicos importantes:
 
 1. **Conflicto de `Read-Only`:** Al activar el sistema de archivos de solo lectura, servicios como Apache y MySQL fallaban al intentar escribir logs o PIDs.
+
 * *Solución:* Implementación de volúmenes `tmpfs` (RAM) para las rutas `/tmp`, `/var/run` y `/var/log` en cada servicio.
 
-
 2. **Rescate de Root en PHP:** Se detectó una vulnerabilidad en el código heredado que usaba credenciales de root si fallaba el usuario estándar.
+
 * *Solución:* Eliminación total del fallback a root en `db.php` para cumplir el principio de mínimo privilegio.
-
-
 
 ### 2.3. Sprint Planning (Sprint 5 - Monitorización y Finalización)
 
