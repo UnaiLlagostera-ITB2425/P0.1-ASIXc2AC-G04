@@ -17,16 +17,17 @@ El proyecto ha evolucionado en dos fases:
 
 * **configuration**
 * [apache2.md](docs/configuracion/apache2.md)
-* [mysql.md](https://www.google.com/search?q=docs/configuration/mysql.md)
+* [mysql.md](docs/configuracion//mysql.md)
 
 
 * **despliegue**
-* [github_workflow.md](https://www.google.com/search?q=docs/despliegue/github_workflow.md)
-* [mysql_des.md](https://www.google.com/search?q=docs/despliegue/mysql_des.md)
-* [web_server.md](https://www.google.com/search?q=docs/despliegue/web_server.md)
+* [github_workflow.md](docs/despliegue/github_workflow.md)
+* [mysql_des.md](docs/despliegue/mysql_des.md)
+* [web_server.md](docs/despliegue/web_server.md)
 
 
 * **estructura_final**
+* (Hay que revisar con cual nos quedamos)
 * [creacion_contenedores_prueba.md](https://www.google.com/search?q=docs/estructura_final/creacion_contenedores_prueba.md)
 * [creacion_contenedores_prueba2.md](https://www.google.com/search?q=docs/estructura_final/creacion_contenedores_prueba2.md)
 * [docker.md](https://www.google.com/search?q=docs/estructura_final/docker.md)
@@ -36,20 +37,21 @@ El proyecto ha evolucionado en dos fases:
 
 
 * **información_previa**
-* [creacion_github.md](https://www.google.com/search?q=docs/informaci%C3%B3n_previa/creacion_github.md)
-* [estudio_tecnologias.md](https://www.google.com/search?q=docs/informaci%C3%B3n_previa/estudio_tecnologias.md)
-* [infraestructura_inicial.md](https://www.google.com/search?q=docs/informaci%C3%B3n_previa/infraestructura_inicial.md)
+* [creacion_github.md](docs/informacio_previa/creacion_github.md)
+* [estudio_tecnologias.md](docs/informacio_previa/estudio_tecnologias.md)
+* [infraestructura_inicial.md](docs/informacio_previa/infraestructura_inicial.md)
 
 
 * **manuales**
-* [manual_administrador.md](https://www.google.com/search?q=docs/manuales/manual_administrador.md)
-* [manual_usuario.md](https://www.google.com/search?q=docs/manuales/manual_usuario.md)
+* [manual_administrador.md](docs/manuales/manual_administrador.md)
+* [manual_usuario.md](docs/manuales/manual_usuario.md)
 
 
 * **securizacion**
+* (Los dos primeros aun estan en proceso)
 * [firewall_host.md](https://www.google.com/search?q=docs/securizacion/firewall_host.md)
 * [hardening_bd.md](https://www.google.com/search?q=docs/securizacion/hardening_bd.md)
-* [Contratiempos.md](https://www.google.com/search?q=docs/securizacion/Contratiempos.md)
+* [Contratiempos.md](docs/securizacion/Contratiempos.md)
 
 
 
