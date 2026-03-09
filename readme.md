@@ -37,9 +37,9 @@ El proyecto ha evolucionado en dos fases:
 
 
 * **información_previa**
-* [creacion_github.md](docs/informacio_previa/creacion_github.md)
-* [estudio_tecnologias.md](docs/informacio_previa/estudio_tecnologias.md)
-* [infraestructura_inicial.md](docs/informacio_previa/infraestructura_inicial.md)
+* [creacion_github.md](docs/informacion_previa/creacion_github.md)
+* [estudio_tecnologias.md](docs/informacion_previa/estudio_tecnologias.md)
+* [infraestructura_inicial.md](docs/informacion_previa/infraestructura_inicial.md)
 
 
 * **manuales**
