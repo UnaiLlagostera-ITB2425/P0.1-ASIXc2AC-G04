@@ -16,7 +16,7 @@ El proyecto ha evolucionado en dos fases:
 ## Indice
 
 * **configuration**
-* [apache2.md](https://www.google.com/search?q=docs/configuration/apache2.md)
+* [apache2.md](docs/configuracion/apache2.md)
 * [mysql.md](https://www.google.com/search?q=docs/configuration/mysql.md)
 
 
