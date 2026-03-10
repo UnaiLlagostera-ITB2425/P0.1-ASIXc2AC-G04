@@ -6,6 +6,7 @@ Este documento detalla la arquitectura, despliegue y mantenimiento de la platafo
 
 La infraestructura se basa en microservicios orquestados con Docker Compose, utilizando una red interna `extagram-net`.
 
+
 ### Servicios
 
 | Servicio | Contenedor | Descripción | Puerto Interno |
@@ -42,16 +43,16 @@ La infraestructura se basa en microservicios orquestados con Docker Compose, uti
 
 1. Clonar el repositorio o copiar los archivos al servidor en `~/extagram`.
 2. Asegurar la existencia de los certificados SSL en `./certs/`:
-    ```bash
-    # Estructura requerida
-    certs/
-    ├── server.crt
-    └── server.key
-    ```
+```bash
+# Estructura requerida
+certs/
+├── server.crt
+└── server.key
+```
 3. Verificar permisos de ejecución en scripts de utilidad:
-    ```bash
-    chmod +x *.sh
-    ```
+```bash
+chmod +x *.sh
+```
 
 ### 3.2. Arranque del Sistema
 
@@ -134,7 +135,7 @@ Si se requiere purgar las imágenes subidas manualmente:
 sudo rm -rf src/uploads/*
 ```
 
-**Nota:** Esto generará errores 404 si las entradas siguen existiendo en la BBDD.
+> **Nota:** Esto generará errores 404 si las entradas siguen existiendo en la BBDD.
 
 ---
 

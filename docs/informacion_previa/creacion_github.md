@@ -35,19 +35,16 @@ P0.1-ASIXc2AC-G04/
 
 > ❗Esta estructura puede modificarse según conveniencia del administrador/equipo dev
 
+---
+
 ## 3. Gestión del Equipo (Collaborators)
 Dado que Extagram es un proyecto en equipo donde todos son responsables de la totalidad del contenido, es vital dar acceso a los compañeros.
 
 **Instrucciones:**
-
-- Dentro del repositorio en GitHub, ir a la pestaña Settings (Configuración).
-
-- En el menú lateral izquierdo, seleccionar Collaborators (Colaboradores).
-
-- Clic en el botón verde Add people.
-
+- Dentro del repositorio en GitHub, ir a la pestaña **Settings** (Configuración).
+- En el menú lateral izquierdo, seleccionar **Collaborators** (Colaboradores).
+- Clic en el botón verde **Add people**.
 - Escribir el nombre de usuario o correo de los compañeros de equipo.
-
 - Seleccionar el rol (normalmente "Write" o "Admin").
 
 ![Captura: Pantalla de GitHub collaborators](../../media/img/github_collaborators.png)

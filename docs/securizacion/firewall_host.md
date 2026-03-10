@@ -2,6 +2,7 @@
 
 Esta configuración establece un perímetro de seguridad a nivel de **Sistema Operativo (Host)**. A diferencia de un WAF (que analiza el contenido HTTP), este firewall actúa como una barrera física que decide qué conexiones de red se aceptan o rechazan antes de que lleguen siquiera a los contenedores Docker (S1).
 
+
 **Objetivo:** Proteger el Gateway S1 asegurando que solo el tráfico web legítimo (y la administración SSH) pueda tocar el servidor.
 
 ---
@@ -13,7 +14,6 @@ Lo primero es establecer una política de "Lista Blanca": se prohíbe todo por d
 ```bash
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-
 ```
 
 * **`deny incoming`**: Cierra **todas** las puertas del servidor. Si alguien intenta conectar a cualquier puerto, el servidor ignorará la petición silenciosamente (DROP). Esto oculta servicios que podrían estar corriendo accidentalmente.
@@ -27,7 +27,6 @@ sudo ufw default allow outgoing
 
 ```bash
 sudo ufw allow 22/tcp
-
 ```
 
 * **Explicación:** Abre el puerto estándar de **SSH**. Sin esta regla, al activar el firewall, tu propia sesión de terminal se cortaría y perderías el control remoto del servidor para siempre.
@@ -41,7 +40,6 @@ El servicio **S1 (Proxy)** es el único punto de entrada autorizado para la apli
 ```bash
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
-
 ```
 
 * **`80/tcp` (HTTP)**: Necesario para recibir la primera petición del usuario, que luego S1 redirigirá automáticamente a HTTPS (Redirección 301).
@@ -57,7 +55,6 @@ Una capa extra de protección contra ataques de fuerza bruta o denegación de se
 
 ```bash
 sudo ufw limit 443/tcp
-
 ```
 
 * **Explicación:** En lugar de un simple "allow", el comando `limit` vigila la frecuencia de conexión. Si una misma dirección IP intenta iniciar 6 o más conexiones en un intervalo de 30 segundos, UFW bloqueará esa IP temporalmente. Es muy efectivo contra bots agresivos.
@@ -70,14 +67,12 @@ Una vez definidas las reglas, encendemos el sistema.
 
 ```bash
 sudo ufw enable
-
 ```
 
 Para confirmar que todo está correcto, usa:
 
 ```bash
 sudo ufw status verbose
-
 ```
 
 **Resultado Final:**

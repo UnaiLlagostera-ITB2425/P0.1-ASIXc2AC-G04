@@ -46,7 +46,7 @@ Seleccionar y copiar la salida del comando anterior, para posteriormente enviar 
 ![Clave Pública](img/clave_pub.png)
 *Captura: Contenido de la clave pública lista para copiar*
 
-**Paso 3: El administrador debe registrar la clave en GitHub:**
+**Paso 2: El administrador debe registrar la clave en GitHub:**
 1. Ir a **Settings** → **SSH and GPG keys**
 2. Clic en **New SSH key**
 3. Pegar la clave pública en el campo "Key"
@@ -130,7 +130,7 @@ ssh -G git@github.com
 
 ## Clonación del Repositorio
 
-###  Comandos para Clonar y Configurar
+### Comandos para Clonar y Configurar
 
 **Clonar el repositorio mediante SSH:**
 ```bash

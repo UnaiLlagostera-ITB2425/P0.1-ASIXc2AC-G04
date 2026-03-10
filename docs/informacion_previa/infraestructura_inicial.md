@@ -1,4 +1,4 @@
-# Infraestructura inicial del Proyecto:
+# Infraestructura Inicial del Proyecto
 
 ## 1. Descripción General
 Para el primer sprint, el objetivo es establecer un **Producto Mínimo Viable (MVP)** utilizando una arquitectura **monolítica**. En lugar de separar los servicios en contenedores o múltiples servidores, todos los componentes necesarios para la aplicación *Extagram* se desplegarán y configurarán dentro de una **única instancia en AWS (EC2)**.
@@ -15,8 +15,8 @@ Se aprovisionará una única máquina virtual (Instancia EC2) que alojará la pi
 
 ### Componentes de Software (Instalados en la instancia)
 1.  **Servidor Web:** Apache. Actuará como punto de entrada para las peticiones HTTP.
-2.  **Intérprete Backend:** PHP. Ejecuta el código de `extagram.php`. Valida que la foto sea subida correcta.
-3.  **Base de Datos:** MySql Server. Instalado localmente en la misma instancia (`localhost`). Almacenará la tabla `posts` y, opcionalmente, las imágenes como BLOBs.
+2.  **Intérprete Backend:** PHP. Ejecuta el código de `extagram.php`. Valida que la foto sea subida correctamente.
+3.  **Base de Datos:** MySQL Server. Instalado localmente en la misma instancia (`localhost`). Almacenará la tabla `posts` y, opcionalmente, las imágenes como BLOBs.
 
 ## 3. Esquema de Red y Seguridad
 

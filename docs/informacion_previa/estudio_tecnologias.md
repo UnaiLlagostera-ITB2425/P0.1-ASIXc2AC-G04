@@ -26,13 +26,12 @@ Para alojar la aplicación, se han evaluado tres escenarios posibles, descartand
 ### 2.1. Opciones Evaluadas
 
 * **IsardVDI (Cloud Privada del Centro):** Entorno de virtualización académico.
-* *Pros:* Entorno conocido, gratuito y gestionado por la escuela.
-* *Contras:* Acceso externo limitado (a menudo requiere VPN), no dispone de herramientas de gestión de red avanzadas (Security Groups definidos por usuario) y es un entorno puramente educativo, no productivo.
-
+    * *Pros:* Entorno conocido, gratuito y gestionado por la escuela.
+    * *Contras:* Acceso externo limitado (a menudo requiere VPN), no dispone de herramientas de gestión de red avanzadas (Security Groups definidos por usuario) y es un entorno puramente educativo, no productivo.
 
 * **Cloud AWS (Amazon Web Services):** Infraestructura como Servicio (IaaS) líder del mercado.
-* *Pros:* Estándar global, control total de redes (VPC, Subnets, Security Groups), IPs públicas reales y documentación exhaustiva.
-* *Contras:* Curva de aprendizaje inicial.
+    * *Pros:* Estándar global, control total de redes (VPC, Subnets, Security Groups), IPs públicas reales y documentación exhaustiva.
+    * *Contras:* Curva de aprendizaje inicial.
 
 ### 2.2. Decisión Final: AWS EC2
 
@@ -118,22 +117,18 @@ Se han evaluado tres tipos de instancias para equilibrar rendimiento y coste dur
 | **t3.micro** | **2** | 1 GiB | Nitro (Nueva) | **~$0.0104 / hora** |
 | **t3.small** | 2 | 2 GiB | Nitro (Nueva) | ~$0.0208 / hora |
 
-**Precios basados en la región us-east-1. Pueden variar ligeramente según disponibilidad.*
+*Precios basados en la región us-east-1. Pueden variar ligeramente según disponibilidad.*
 
 ### 6.2. Análisis de Opciones
 
 1. **Opción A: t2.micro (Descartada)**
-* A pesar de ser la clásica de la "Capa Gratuita", es una tecnología más antigua (Hipervisor Xen). Ofrece solo 1 vCPU y su coste es paradójicamente igual o superior a la familia T3 en muchas regiones. No aporta ventajas técnicas.
-
+    * A pesar de ser la clásica de la "Capa Gratuita", es una tecnología más antigua (Hipervisor Xen). Ofrece solo 1 vCPU y su coste es paradójicamente igual o superior a la familia T3 en muchas regiones. No aporta ventajas técnicas.
 
 2. **Opción B: t3.small (Plan de Contingencia)**
-* Con 2 GiB de RAM, sería la opción más cómoda para soportar Docker y MySQL 8. Sin embargo, su coste es el doble. Reservamos esta opción solo como "Plan de Escalado Vertical" en caso de emergencia técnica en el Sprint 3.
-
+    * Con 2 GiB de RAM, sería la opción más cómoda para soportar Docker y MySQL 8. Sin embargo, su coste es el doble. Reservamos esta opción solo como "Plan de Escalado Vertical" en caso de emergencia técnica en el Sprint 3.
 
 3. **Opción C: t3.micro (Opción Seleccionada)**
-* **La ganadora.** Ofrece **2 vCPUs** (el doble que la t2), lo que acelerará los despliegues y la compilación de contenedores. Es la opción más económica de las tres.
-
-
+    * **La ganadora.** Ofrece **2 vCPUs** (el doble que la t2), lo que acelerará los despliegues y la compilación de contenedores. Es la opción más económica de las tres.
 
 ### 6.3. Estrategia de Optimización de Recursos
 

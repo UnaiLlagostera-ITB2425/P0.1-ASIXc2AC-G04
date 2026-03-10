@@ -1,88 +1,114 @@
-# Documentación Centralización de Logs con Grafana, Loki y Promtail
+# Documentación Centralización de Logs y Monitorización de Métricas con Grafana, Loki y Prometheus
 
 ## 1. Introducción y Objetivo
 
-Se ha implementado un sistema de centralización de logs para la plataforma **Extagram**, desplegada mediante microservicios en Docker Compose. El objetivo es recoger, almacenar y visualizar de forma centralizada los logs de todos los contenedores, garantizando la seguridad de la red y el acceso restringido a los dashboards.
+Se ha implementado un sistema integral de observabilidad (logs y métricas) para la plataforma **Extagram**, desplegada mediante microservicios en Docker Compose. El objetivo es recoger, almacenar y visualizar de forma centralizada tanto los logs de los contenedores como el rendimiento del servidor físico (CPU, RAM, Disco), garantizando la seguridad de la red y el acceso restringido a los dashboards.
 
 La solución elegida combina:
-- **Loki** como backend de almacenamiento de logs.
-- **Promtail** como agente recolector de logs desde los contenedores Docker.
-- **Grafana** como interfaz de visualización y exploración.
+
+* **Loki** como backend de almacenamiento de logs.
+* **Promtail** como agente recolector de logs desde los contenedores Docker.
+* **Prometheus** como base de datos de series temporales para métricas.
+* **Node Exporter** como agente recolector de métricas de hardware del servidor.
+* **Grafana** como interfaz web unificada de visualización.
 
 Se ha añadido una red interna específica para los servicios de monitorización, separada de la red de aplicación, para mejorar el aislamiento y la seguridad.
 
+---
+
 ## 2. Arquitectura de Monitorización
 
-Se han añadido tres nuevos servicios al archivo `docker-compose.yml` original, integrándose en una red interna `monitoring-net` (con nombre real `extagram_monitoring-net`) y respetando las políticas de hardening existentes.
 
-| Servicio   | Contenedor | Descripción                                                                 |
-|------------|------------|-----------------------------------------------------------------------------|
-| **Loki**   | `loki`     | Agregador de logs. Almacena y permite consultar los logs etiquetados.      |
-| **Promtail** | `promtail` | Recolecta logs de todos los contenedores Docker y los envía a Loki.       |
-| **Grafana** | `grafana`  | Interfaz web para consultar y visualizar logs. Expuesto solo en localhost. |
 
-**Flujo de datos:**  
-Los contenedores generan logs en `stdout`/`stderr` → Docker los almacena en `/var/lib/docker/containers` → Promtail los lee, añade etiquetas (`container`, `service`, `project`) y los envía a Loki → Grafana consulta Loki y muestra los logs.
+Se han añadido cinco nuevos servicios al archivo `docker-compose.yml` original, integrándose en una red interna `monitoring-net` (con nombre real `extagram_monitoring-net`) y respetando las políticas de hardening existentes.
+
+| Servicio | Contenedor | Descripción |
+| :--- | :--- | :--- |
+| **Loki** | `loki` | Agregador de logs. Almacena y permite consultar los logs etiquetados. |
+| **Promtail** | `promtail` | Recolecta logs de los contenedores Docker y los envía a Loki. |
+| **Prometheus** | `prometheus` | Recolecta y almacena métricas del sistema en formato de series de tiempo. |
+| **Node Exporter** | `node-exporter` | Lee las métricas de hardware (CPU, RAM, Disco) del sistema operativo host. |
+| **Grafana** | `grafana` | Interfaz web para consultar logs y métricas. Expuesto solo en localhost. |
+
+**Flujos de datos:**
+
+* **Logs:** Los contenedores generan logs en `stdout`/`stderr` → Docker los almacena en `/var/lib/docker/containers` → Promtail los lee y los envía a Loki → Grafana consulta a Loki.
+* **Métricas:** Node Exporter expone métricas de hardware en el puerto 9100 → Prometheus las recolecta (pull) cada 15 segundos → Grafana consulta a Prometheus.
 
 **Redes:**
-- `extagram_extagram-net`: red de los servicios de la aplicación (s1-proxy, s2-app, s3-app, s4-upload, s5-images, s6-static, s7-db).
-- `extagram_monitoring-net`: red de los servicios de monitorización (loki, promtail, grafana).
 
-Ambas redes están aisladas; no hay comunicación directa entre ellas. Promtail accede a los logs mediante el socket de Docker (montado como volumen), no por red.
+* `extagram_extagram-net`: red de la aplicación (s1-proxy, s2-app, s3-app, s4-upload, s5-images, s6-static, s7-db).
+* `extagram_monitoring-net`: red de monitorización (loki, promtail, prometheus, node-exporter, grafana). Ambas redes están aisladas.
+
+---
 
 ## 3. Justificación de la Elección
 
-Se optó por **Grafana + Loki + Promtail** por las siguientes razones:
+Se optó por este stack por las siguientes razones:
 
-- **Loki** es ligero, no requiere indexación completa (solo etiquetas), ideal para entornos Docker.
-- **Promtail** se integra nativamente con Docker y descubre automáticamente los contenedores.
-- **Grafana** proporciona una interfaz unificada y potente para exploración y dashboards.
-- Todo el stack es de código abierto, con buena documentación y comunidad activa.
-- Se alinea con el enfoque de microservicios ya utilizado en Extagram.
+* **Loki + Promtail** son extremadamente ligeros para logs de Docker y no requieren indexación completa (solo etiquetas).
+* **Prometheus + Node Exporter** es el estándar de la industria para monitorización de hardware y microservicios, utilizando un modelo *pull* altamente eficiente.
+* **Grafana** proporciona una interfaz unificada que permite cruzar datos: ver un pico de CPU en las métricas y, en la misma pantalla, ver qué logs se generaron en ese exacto segundo.
+* Todo el stack es de código abierto y se alinea con la arquitectura de microservicios de Extagram.
 
-Alternativas como ELK (Elasticsearch, Logstash, Kibana) fueron descartadas por requerir más recursos y complejidad. Nagios no es adecuado para centralización de logs.
+---
 
 ## 4. Requisitos Previos
 
-- Servidor Linux (Ubuntu 20.04/22.04/24.04) con Docker Engine ≥20.10 y Docker Compose (preferiblemente V2).
-- Acceso SSH a la instancia (clave privada `.pem`).
-- Puertos 80, 443 y 22 abiertos en el Security Group de AWS. El puerto 3000 **no** debe estar abierto (se accede por túnel SSH).
-- Certificados SSL en `./certs/` para el proxy inverso (s1-proxy).
-- Estructura de directorios existente de Extagram.
+* Servidor Linux (Ubuntu) con Docker Engine ≥20.10 y Docker Compose.
+* Acceso SSH a la instancia (clave privada `.pem`).
+* Puertos 80, 443 y 22 abiertos en el Security Group de AWS. El puerto 3000 **no** debe estar abierto al público.
+* Estructura de directorios existente de Extagram.
+
+---
 
 ## 5. Medidas de Seguridad Aplicadas (Hardening)
 
-Todos los servicios, incluidos los nuevos, heredan las políticas de seguridad ya implementadas en Extagram y se han reforzado:
+Todos los servicios de monitorización heredan las estrictas políticas de seguridad del proyecto:
 
 ### 5.1. Hardening a nivel de contenedor
-- `security_opt: no-new-privileges:true` – Evita escalada de privilegios.
-- `pids_limit: 100` – Limita el número de procesos.
-- `read_only: true` (excepto Promtail) – Sistema de archivos raíz de solo lectura.
-- `tmpfs` montado en `/tmp` y otros directorios necesarios para escritura temporal.
 
-### 5.2. Hardening específico de Loki y Grafana
-- **Loki**: se añadió `user: "0"` temporalmente para solventar permisos (se recomienda ajustar con el UID 10001). Se montó `tmpfs` en `/wal` para permitir la escritura del WAL.
-- **Grafana**: el puerto 3000 se publica solo en `127.0.0.1` (localhost), impidiendo accesos externos.
-- **Promtail**: necesita acceso al socket de Docker (`/var/run/docker.sock`) para descubrir contenedores; se monta en modo `ro` (solo lectura) para minimizar riesgos.
+* `security_opt: no-new-privileges:true` – Evita escalada de privilegios en todos los contenedores.
+* `pids_limit: 100` – Limita el número de procesos para mitigar ataques fork-bomb.
+* `read_only: true` – Sistema de archivos raíz de solo lectura (excepto Promtail, Prometheus y Node Exporter que requieren accesos específicos de lectura al host).
+* `tmpfs` montado en `/tmp` y otros directorios necesarios para escritura temporal.
 
-### 5.3. Redes internas aisladas
-- Los servicios de monitorización están en su propia red (`monitoring-net`), aislados de la red de aplicación.
-- La red de aplicación (`extagram-net`) permanece para los servicios originales.
+### 5.2. Hardening específico por servicio
 
-### 5.4. Firewall (Security Group AWS)
-- Solo se exponen al exterior los puertos 80 (HTTP), 443 (HTTPS) y 22 (SSH).
-- El puerto 3000 de Grafana **no es accesible** desde internet; se accede mediante túnel SSH.
+* **Loki**: Se montó `tmpfs` en `/wal` para permitir la escritura temporal de la base de datos sin comprometer el sistema de archivos raíz.
+* **Promtail**: Accede al socket de Docker (`/var/run/docker.sock`) estrictamente en modo `ro` (solo lectura).
+* **Node Exporter**: Monta los sistemas de archivos del host (`/proc`, `/sys`, `/`) estrictamente en modo `ro` (solo lectura) para auditar sin capacidad de modificar el servidor físico.
+* **Grafana**: El puerto 3000 se publica solo en `127.0.0.1` (localhost).
+
+---
 
 ## 6. Implementación Paso a Paso
 
 ### 6.1. Preparación del entorno
+
 ```bash
 cd ~/extagram
-mkdir -p loki promtail grafana/provisioning/datasources
+mkdir -p loki promtail prometheus grafana/provisioning/datasources
 ```
 
-### 6.2. Configuración de Loki
+### 6.2. Configuración de Prometheus
+
+Archivo `prometheus/prometheus.yml`:
+
+```yaml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+```
+
+### 6.3. Configuración de Loki
+
 Archivo `loki/loki-config.yaml`:
+
 ```yaml
 auth_enabled: false
 
@@ -136,8 +162,10 @@ compactor:
   shared_store: filesystem
 ```
 
-### 6.3. Configuración de Promtail
+### 6.4. Configuración de Promtail
+
 Archivo `promtail/promtail-config.yaml`:
+
 ```yaml
 server:
   http_listen_port: 9080
@@ -166,8 +194,10 @@ scrape_configs:
         target_label: 'project'
 ```
 
-### 6.4. Configuración del datasource automático en Grafana
-Archivo `grafana/provisioning/datasources/loki.yaml`:
+### 6.5. Aprovisionamiento Automático de Grafana
+
+Archivo `grafana/provisioning/datasources/datasources.yaml`. (Este archivo auto-configura Loki y Prometheus para evitar hacerlo manualmente en la interfaz).
+
 ```yaml
 apiVersion: 1
 
@@ -178,24 +208,25 @@ datasources:
     url: http://loki:3100
     isDefault: true
     editable: false
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: false
 ```
 
-### 6.5. Modificación del `docker-compose.yml`
+### 6.6. Modificación del `docker-compose.yml`
 
-Se añadieron los servicios de monitorización al final del archivo existente, junto con la nueva red `monitoring-net`. A continuación se muestra el `docker-compose.yml` completo (solo las partes modificadas/nuevas; los servicios originales se mantienen igual).
+Anexar los siguientes servicios al final del archivo original, respetando las indentaciones:
 
 ```yaml
-version: '3.8'
-
-services:
-  # ... servicios originales (s7-db, s2-app, s3-app, s4-upload, s5-images, s6-static, s1-proxy) ...
-
   # --- LOKI: agregación de logs ---
   loki:
     image: grafana/loki:2.9.0
     container_name: loki
     restart: always
-    user: "0"   # temporal para permisos; optimizar con UID 10001
+    user: "0"
     volumes:
       - ./loki:/etc/loki
       - loki_data:/loki
@@ -210,7 +241,7 @@ services:
       - /tmp
       - /wal
 
-  # --- PROMTAIL: recolección de logs (actualizado a v3.0.0) ---
+  # --- PROMTAIL: recolección de logs ---
   promtail:
     image: grafana/promtail:3.0.0
     container_name: promtail
@@ -229,6 +260,39 @@ services:
     pids_limit: 100
     tmpfs:
       - /tmp
+
+  # --- PROMETHEUS: Base de datos de métricas ---
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring-net
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+
+  # --- NODE EXPORTER: Métricas de hardware ---
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: always
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+    networks:
+      - monitoring-net
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
 
   # --- GRAFANA: visualización ---
   grafana:
@@ -249,6 +313,7 @@ services:
       - monitoring-net
     depends_on:
       - loki
+      - prometheus
     security_opt:
       - no-new-privileges:true
     pids_limit: 100
@@ -260,6 +325,7 @@ volumes:
   db_data:
   loki_data:
   grafana_data:
+  prometheus_data:
 
 networks:
   extagram-net:
@@ -268,120 +334,186 @@ networks:
     driver: bridge
 ```
 
-**Nota:** Las redes creadas por Docker Compose recibirán el prefijo del proyecto (por defecto `extagram_`), por lo que los nombres reales serán `extagram_extagram-net` y `extagram_monitoring-net`.
-
-### 6.6. Creación de directorios de datos y permisos
-```bash
-sudo mkdir -p grafana_data loki_data
-sudo chown -R 472:472 grafana_data      # usuario grafana (UID 472)
-sudo chown -R 10001:10001 loki_data     # usuario loki (UID 10001)
-```
-
 ### 6.7. Despliegue inicial
+
+Bajar el entorno actual (para recrear redes y volúmenes limpios) y volver a levantarlo:
+
 ```bash
+sudo docker compose down
 sudo docker compose up -d
 ```
 
-Si se encuentra el error `KeyError: 'ContainerConfig'` debido a una versión antigua de `docker-compose` (1.29), usar `docker compose` (con espacio) en su lugar. Si no está instalado, instalar el plugin V2:
-```bash
-sudo apt update
-sudo apt install docker-compose-v2
-```
+---
 
-## 7. Acceso a los Logs mediante Túnel SSH
-
-Por razones de seguridad, Grafana no está expuesto directamente en internet. Se accede mediante un túnel SSH desde la máquina local.
+## 7. Acceso y Dashboards
 
 ### 7.1. Establecer túnel SSH
+
+Por seguridad, Grafana no está expuesto en internet. Desde la máquina local:
+
 ```bash
-ssh -i /ruta/a/tu-clave.pem -L 3000:localhost:3000 ubuntu@52.21.109.232
+ssh -i /ruta/a/tu-clave.pem -L 3000:localhost:3000 ubuntu@<IP_DEL_SERVIDOR>
 ```
-- `-L 3000:localhost:3000` redirige el puerto 3000 de la máquina local al puerto 3000 del servidor (donde escucha Grafana).
-- La terminal debe permanecer abierta mientras se use Grafana.
 
-### 7.2. Acceder a Grafana
-Abrir el navegador en `http://localhost:3000` (no `https`).  
-Credenciales por defecto: `admin` / `admin` (se recomienda cambiarlas en la interfaz o mediante variable de entorno).
+Abrir el navegador en `http://localhost:3000`. Credenciales por defecto: `admin` / `admin`. Gracias al aprovisionamiento automático (paso 6.5), Loki y Prometheus ya estarán conectados internamente.
 
-### 7.3. Explorar logs
-- Ir a **Explore** (icono de brújula).
-- Seleccionar la fuente de datos **Loki**.
-- Escribir una consulta, por ejemplo: `{container="s2-app"}`.
-- Pulsar **Run query** para ver los logs en tiempo real.
+### 7.2. Importación del Dashboard de Rendimiento de Host
 
-## 8. Verificación y Uso
+Para visualizar CPU, RAM y Disco:
 
-### 8.1. Comprobar que los contenedores están funcionando
+1. Ir a **Dashboards → New → Import**.
+2. Pegar el siguiente JSON.
+3. Al finalizar, seleccionar "Prometheus" en el campo requerido.
+
+```json
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus Datasource",
+      "description": "Selecciona el origen de datos de Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "title": "Rendimiento del Servidor Host",
+  "uid": "rendimiento-host-v2",
+  "tags": ["rendimiento", "host", "extagram"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "gauge",
+      "title": "Uso de CPU",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+          "refId": "A",
+          "datasource": "${DS_PROMETHEUS}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Uso de Memoria RAM",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "100 - (avg(node_memory_MemAvailable_bytes) / avg(node_memory_MemTotal_bytes) * 100)",
+          "refId": "A",
+          "datasource": "${DS_PROMETHEUS}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "gauge",
+      "title": "Uso de Disco (Raíz)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "datasource": "${DS_PROMETHEUS}",
+      "targets": [
+        {
+          "expr": "100 - (max(node_filesystem_avail_bytes{mountpoint=\"/\"}) / max(node_filesystem_size_bytes{mountpoint=\"/\"}) * 100)",
+          "refId": "A",
+          "datasource": "${DS_PROMETHEUS}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 80 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+## 8. Verificación y Pruebas de Estrés
+
+Para validar que la monitorización responde correctamente, ejecutar desde la terminal del servidor:
+
+**1. Test de estrés de CPU (Saturar 1 núcleo):**
+
 ```bash
-sudo docker ps | grep -E "loki|promtail|grafana"
+cat /dev/urandom > /dev/null
+# Pulsar Ctrl+C tras observar el pico en Grafana.
 ```
-Deben aparecer en estado `Up`.
 
-### 8.2. Probar conectividad interna
+**2. Test de estrés de RAM (Ocupar 500MB):**
+
 ```bash
-sudo docker exec grafana curl http://loki:3100/ready
+python3 -c "basura = ' ' * (500 * 1024 * 1024); import time; time.sleep(60)"
+# Se libera automáticamente al pasar un minuto.
 ```
-Debería responder `ready`.
 
-### 8.3. Crear un dashboard básico
-- En Grafana, ir a **Dashboards → New → New Dashboard**.
-- Añadir una visualización con consulta tipo logs.
-- Filtrar por contenedor o servicio.
+---
 
 ## 9. Mantenimiento y Troubleshooting
 
-### 9.1. Logs de los contenedores de monitorización
+**Ver logs de los agentes:**
 ```bash
-sudo docker logs loki --tail 50
 sudo docker logs promtail --tail 50
-sudo docker logs grafana --tail 50
+sudo docker logs prometheus --tail 50
 ```
 
-### 9.2. Reinicio de servicios
+**Error "Conflict. The container name is already in use":**
 ```bash
-sudo docker compose restart <servicio>
-```
-
-### 9.3. Problemas comunes y soluciones
-
-**Error: "unable to open database file: is a directory" en Grafana**  
-Solución:
-```bash
-sudo rm -rf grafana_data/*
-sudo chown -R 472:472 grafana_data
-sudo docker compose restart grafana
-```
-
-**Error: Loki no arranca por permisos de WAL**  
-Añadir `tmpfs: - /wal` temporalmente o configurar `wal.dir` dentro del volumen persistente (como en la configuración final).
-
-**Error: "Conflict. The container name ... is already in use"**  
-Eliminar el contenedor conflictivo:
-```bash
-sudo docker ps -a | grep loki
 sudo docker rm -f <container_id>
 ```
 
-**Error de versión de docker-compose**  
-Usar `docker compose` (con espacio) en lugar de `docker-compose`. Instalar Docker Compose V2 si es necesario:
+**Copias de seguridad de métricas y logs:**
 ```bash
-sudo apt update
-sudo apt install docker-compose-v2
+sudo tar -czf backup_observability_$(date +%Y%m%d).tar.gz grafana_data/ loki_data/ prometheus_data/
 ```
 
-### 9.4. Copias de seguridad
-Los datos de Loki y Grafana se almacenan en volúmenes Docker (`loki_data` y `grafana_data`). Se pueden respaldar mediante:
-```bash
-sudo tar -czf backup_grafana_$(date +%Y%m%d).tar.gz grafana_data/
-sudo tar -czf backup_loki_$(date +%Y%m%d).tar.gz loki_data/
-```
+---
 
 ## 10. Conclusiones
 
-Se ha implementado con éxito un sistema centralizado de logs que cumple los objetivos de monitorización y seguridad exigidos. La elección de Grafana, Loki y Promtail ha resultado adecuada por su ligereza, integración con Docker y facilidad de configuración.
-
-Las medidas de hardening aplicadas (contenedores `read-only`, límites de procesos, tmpfs, redes aisladas) garantizan un entorno seguro. El acceso mediante túnel SSH evita exponer Grafana a internet, cumpliendo así con el requisito de red securizada.
-
-La separación en dos redes internas (`extagram-net` para la aplicación y `monitoring-net` para los logs) mejora el aislamiento sin afectar la funcionalidad.
-
-Esta documentación servirá como guía para futuras ampliaciones y para el equipo de operaciones.
+Se ha implementado con éxito un sistema de observabilidad integral (Logs + Métricas) que cumple los objetivos exigidos. Las medidas de hardening aplicadas garantizan un entorno seguro, y la separación de redes asegura que la recopilación de datos no interfiera con el tráfico de la aplicación web Extagram. La automatización del aprovisionamiento de datasources elimina los errores manuales en Grafana.

@@ -42,17 +42,13 @@ Al ingresar, verás el **Muro de Activos**.
 
 ## 3. Preguntas Frecuentes (FAQ)
 
-**P: ¿Por qué mi foto no se sube?**  
-R: Verifique que el archivo no supere los 50MB y que sea un formato de imagen válido. Si el problema persiste, contacte al administrador para revisar la conexión con el servicio de almacenamiento (S4).
+**P: ¿Por qué mi foto no se sube?** R: Verifique que el archivo no supere los 50MB y que sea un formato de imagen válido. Si el problema persiste, contacte al administrador para revisar la conexión con el servicio de almacenamiento (S4).
 
-**P: ¿Puedo borrar o editar una foto?**  
-R: Actualmente la interfaz de usuario es de "Solo Agregado" (Append Only). Para eliminar contenido erróneo, solicite la baja del ID de la imagen al equipo de administración de sistemas.
+**P: ¿Puedo borrar o editar una foto?** R: Actualmente la interfaz de usuario es de "Solo Agregado" (Append Only). Para eliminar contenido erróneo, solicite la baja del ID de la imagen al equipo de administración de sistemas.
 
-**P: La página carga pero las imágenes aparecen rotas.**  
-R: Esto puede indicar una desincronización entre la base de datos y el almacenamiento físico. Reporte el ID de la imagen afectada a soporte.
+**P: La página carga pero las imágenes aparecen rotas.** R: Esto puede indicar una desincronización entre la base de datos y el almacenamiento físico. Reporte el ID de la imagen afectada a soporte.
 
-**P: ¿Qué significa "Served by Node: [Nombre]" al pie de página?**  
-R: Extagram utiliza múltiples servidores para garantizar la velocidad. Ese código indica qué servidor específico procesó su solicitud en ese momento.
+**P: ¿Qué significa "Served by Node: [Nombre]" al pie de página?** R: Extagram utiliza múltiples servidores para garantizar la velocidad. Ese código indica qué servidor específico procesó su solicitud en ese momento.
 
 ---
 
