@@ -25,12 +25,7 @@ El proyecto ha evolucionado en dos fases:
   * [web_server.md](docs/despliegue/web_server.md)
 
 * **estructura_final**
-  * [creacion_contenedores_prueba.md](docs/estructura_final/creacion_contenedores_prueba.md)
-  * [creacion_contenedores_prueba2.md](docs/estructura_final/creacion_contenedores_prueba2.md)
-  * [docker.md](docs/estructura_final/docker.md)
-  * [final.md](docs/estructura_final/final.md)
-  * [infraestructura_final.md](docs/estructura_final/infraestructura_final.md)
-  * [verificacion.md](docs/estructura_final/verificacion.md)
+  * [arquitectura_final.md](docs/estructura_final/arquitectura_final.md)
 
 * **información_previa**
   * [creacion_github.md](docs/informacion_previa/creacion_github.md)
