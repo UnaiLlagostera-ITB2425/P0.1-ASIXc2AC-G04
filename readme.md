@@ -37,9 +37,12 @@ El proyecto ha evolucionado en dos fases:
   * [manual_usuario.md](docs/manuales/manual_usuario.md)
 
 * **securizacion**
+  * [centralizacion_logs.md](docs/securizacion/centralizacion_logs.md)
+  * [centralizacion_logs_dashboard.md](docs/securizacion/centralizacion_logs_dashboard.mc)
   * [firewall_host.md](docs/securizacion/firewall_host.md)
   * [hardening_bd.md](docs/securizacion/hardening_bd.md)
-  * [Contratiempos.md](docs/securizacion/Contratiempos.md)
+
+* [Contratiempos.md](docs/securizacion/Contratiempos.md)
 
 ---
 
